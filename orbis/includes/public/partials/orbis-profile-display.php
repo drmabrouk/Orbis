@@ -98,6 +98,19 @@ $profile_pic = get_user_meta( $user_id, 'orbis_profile_pic', true );
         <div id="orbis-profile-message"></div>
         <button type="submit" name="orbis_save_profile" class="orbis-auth-submit">Save Changes</button>
     </form>
+
+    <div class="orbis-profile-section" style="margin-top: 50px; border-top: 2px solid #ff4d4d; padding-top: 20px;">
+        <h3 style="color: #ff4d4d;">Account Management</h3>
+        <p>Warning: Some of these actions are irreversible. We recommend backing up your data first.</p>
+
+        <div class="orbis-account-actions" style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <button id="orbis-export-account" class="orbis-auth-submit" style="background: #4caf50; width: auto;">Backup & Export Data</button>
+            <button id="orbis-reset-account" class="orbis-auth-submit" style="background: #ff9800; width: auto;">Reset Account Settings</button>
+            <button id="orbis-delete-account" class="orbis-auth-submit" style="background: #f44336; width: auto;">Delete Account Permanently</button>
+        </div>
+        <div id="orbis-account-message" style="margin-top: 15px;"></div>
+        <?php wp_nonce_field( 'orbis_account_action', 'orbis_account_nonce' ); ?>
+    </div>
 </div>
 
 <style>

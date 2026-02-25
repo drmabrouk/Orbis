@@ -67,6 +67,9 @@ class Orbis_Public {
         // AJAX handlers
         add_action( 'wp_ajax_nopriv_orbis_register_user', array( $this, 'handle_registration' ) );
         add_action( 'wp_ajax_orbis_update_profile', array( $this, 'handle_profile_update' ) );
+        add_action( 'wp_ajax_orbis_export_data', array( $this, 'handle_export_data' ) );
+        add_action( 'wp_ajax_orbis_reset_account', array( $this, 'handle_reset_account' ) );
+        add_action( 'wp_ajax_orbis_delete_account', array( $this, 'handle_delete_account' ) );
 
 	}
 
@@ -89,10 +92,12 @@ class Orbis_Public {
 	public function enqueue_scripts() {
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/orbis-public.js', array( 'jquery' ), $this->version, false );
         wp_enqueue_script( $this->plugin_name . '-auth', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/js/orbis-auth.js', array( 'jquery' ), $this->version, true );
+        wp_enqueue_script( $this->plugin_name . '-account', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/js/orbis-account.js', array( 'jquery' ), $this->version, true );
 
         wp_localize_script( $this->plugin_name . '-auth', 'orbis_auth_params', array(
             'ajax_url'      => admin_url( 'admin-ajax.php' ),
-            'dashboard_url' => site_url( 'orbis-dashboard' )
+            'dashboard_url' => site_url( 'orbis-dashboard' ),
+            'home_url'      => home_url()
         ) );
 	}
 
@@ -264,6 +269,97 @@ class Orbis_Public {
 
             echo '<div class="notice notice-success" style="color:green; font-weight:bold;"><p>Profile updated successfully!</p></div>';
         }
+    }
+
+    /**
+     * Handle Account Export.
+     */
+    public function handle_export_data() {
+        check_ajax_referer( 'orbis_account_action', 'orbis_account_nonce' );
+        $user_id = get_current_user_id();
+
+        $data = array(
+            'user' => get_userdata( $user_id )->data,
+            'meta' => get_user_meta( $user_id ),
+            'content' => array()
+        );
+
+        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form' );
+        foreach ( $post_types as $pt ) {
+            $posts = get_posts( array(
+                'post_type' => $pt,
+                'author'    => $user_id,
+                'posts_per_page' => -1
+            ) );
+            foreach ( $posts as $p ) {
+                $p->meta = get_post_meta( $p->ID );
+                $data['content'][] = $p;
+            }
+        }
+
+        wp_send_json_success( array(
+            'message' => 'Data exported successfully.',
+            'filename' => 'orbis-backup-' . date('Y-m-d') . '.json',
+            'data' => json_encode( $data, JSON_PRETTY_PRINT )
+        ) );
+    }
+
+    /**
+     * Handle Account Reset.
+     */
+    public function handle_reset_account() {
+        check_ajax_referer( 'orbis_account_action', 'orbis_account_nonce' );
+        $user_id = get_current_user_id();
+
+        // Delete all Orbis posts
+        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form' );
+        foreach ( $post_types as $pt ) {
+            $posts = get_posts( array(
+                'post_type' => $pt,
+                'author'    => $user_id,
+                'posts_per_page' => -1,
+                'fields'    => 'ids'
+            ) );
+            foreach ( $posts as $pid ) {
+                wp_delete_post( $pid, true );
+            }
+        }
+
+        // Reset specific user meta
+        $metas = array( 'orbis_phone', 'orbis_country', 'orbis_timezone', 'orbis_social_fb', 'orbis_social_tw', 'orbis_notif_email', 'orbis_notif_inapp', 'orbis_profile_pic' );
+        foreach ( $metas as $m ) {
+            delete_user_meta( $user_id, $m );
+        }
+
+        wp_send_json_success( array( 'message' => 'Account reset successfully.' ) );
+    }
+
+    /**
+     * Handle Account Deletion.
+     */
+    public function handle_delete_account() {
+        check_ajax_referer( 'orbis_account_action', 'orbis_account_nonce' );
+        $user_id = get_current_user_id();
+
+        // 1. Delete all Orbis posts
+        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form' );
+        foreach ( $post_types as $pt ) {
+            $posts = get_posts( array(
+                'post_type' => $pt,
+                'author'    => $user_id,
+                'posts_per_page' => -1,
+                'fields'    => 'ids'
+            ) );
+            foreach ( $posts as $pid ) {
+                wp_delete_post( $pid, true );
+            }
+        }
+
+        // 2. Delete the user
+        require_once( ABSPATH . 'wp-admin/includes/user.php' );
+        wp_delete_user( $user_id );
+
+        wp_send_json_success( array( 'message' => 'Account deleted successfully. Redirecting...' ) );
     }
 
 }
