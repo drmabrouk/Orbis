@@ -1,70 +1,97 @@
-/* Orbis Global Site Structure & Dashboard Styles */
+/*
+ * Orbis Main Stylesheet
+ * High-End Enterprise Workspace Aesthetic
+ */
+
 :root {
+    /* Colors */
     --orbis-primary: #007cba;
-    --orbis-bg: #f4f7f6;
-    --orbis-sidebar-bg: #2d3748;
-    --orbis-sidebar-text: #fff;
-    --orbis-card-bg: #fff;
-    --orbis-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    --orbis-primary-dark: #006ba1;
+    --orbis-secondary: #2d3748;
+    --orbis-bg: #f8fafc;
+    --orbis-sidebar-bg: #1a202c;
+    --orbis-sidebar-text: #e2e8f0;
+    --orbis-card-bg: #ffffff;
+    --orbis-border: #e2e8f0;
+    --orbis-text: #1a202c;
+    --orbis-text-muted: #718096;
+    --orbis-success: #38a169;
+    --orbis-danger: #e53e3e;
+    --orbis-warning: #ed8936;
+
+    /* Spacing & Borders */
+    --orbis-radius: 12px;
+    --orbis-radius-lg: 20px;
+    --orbis-shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --orbis-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --orbis-shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    --orbis-spacing: 24px;
 }
 
-body.orbis-dashboard-active {
-    margin: 0;
-    padding: 0;
+body.orbis-active {
     background: var(--orbis-bg);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--orbis-text);
+    margin: 0;
 }
 
+/* Master Layout */
 .orbis-full-dashboard {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
 
-/* Master Header */
+.orbis-dashboard-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Header Component */
 .orbis-master-header {
-    background: #fff;
-    padding: 15px 30px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    z-index: 100;
+    background: #ffffff;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--orbis-border);
+    z-index: 1000;
 }
 
 .orbis-header-inner {
     display: flex;
     justify-content: space-between;
+    width: 100%;
     align-items: center;
-    max-width: 1400px;
-    margin: 0 auto;
 }
 
 .orbis-site-brand {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 16px;
 }
 
 .orbis-site-logo {
-    max-height: 40px;
+    height: 32px;
+    width: auto;
 }
 
 .orbis-site-title {
     font-size: 20px;
-    font-weight: 700;
-    color: var(--orbis-primary);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--orbis-secondary);
 }
 
-/* Layout Container */
-.orbis-dashboard-layout {
-    display: flex;
-    flex: 1;
-}
-
-/* Sidebar */
+/* Sidebar Component */
 .orbis-master-sidebar {
-    width: 260px;
+    width: 280px;
     background: var(--orbis-sidebar-bg);
-    color: var(--orbis-sidebar-text);
     padding: 30px 0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
 }
 
 .orbis-sidebar-nav ul {
@@ -74,70 +101,151 @@ body.orbis-dashboard-active {
 }
 
 .orbis-sidebar-nav li a {
-    display: block;
-    padding: 12px 25px;
-    color: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 30px;
+    color: var(--orbis-sidebar-text);
     text-decoration: none;
     font-size: 15px;
-    transition: all 0.2s;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    opacity: 0.7;
 }
 
-.orbis-sidebar-nav li a:hover, .orbis-sidebar-nav li.active a {
-    background: rgba(255,255,255,0.1);
+.orbis-sidebar-nav li a:hover,
+.orbis-sidebar-nav li.active a {
+    opacity: 1;
+    background: rgba(255,255,255,0.05);
     color: #fff;
+    border-left: 4px solid var(--orbis-primary);
 }
 
-/* Main Content */
+/* Main Content Area */
 .orbis-master-content {
     flex: 1;
     padding: 40px;
     overflow-y: auto;
-    background: #f8fafc;
+    background: var(--orbis-bg);
 }
 
-/* App View Logic */
-.orbis-app-view {
-    display: none;
-    animation: fadeIn 0.3s ease;
+/* Orbis Universal Components */
+.orbis-card {
+    background: var(--orbis-card-bg);
+    border-radius: var(--orbis-radius);
+    padding: var(--orbis-spacing);
+    border: 1px solid var(--orbis-border);
+    box-shadow: var(--orbis-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.orbis-app-view.active {
-    display: block;
+.orbis-card:hover {
+    box-shadow: var(--orbis-shadow-lg);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.orbis-btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
 }
 
-/* App Grid */
+.orbis-btn-primary {
+    background: var(--orbis-primary);
+    color: #fff;
+}
+
+.orbis-btn-primary:hover {
+    background: var(--orbis-primary-dark);
+    transform: translateY(-2px);
+}
+
+.orbis-btn-secondary {
+    background: #edf2f7;
+    color: var(--orbis-secondary);
+}
+
+.orbis-btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+/* Universal Toolbar */
+.orbis-app-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 15px 25px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid var(--orbis-border);
+    box-shadow: var(--orbis-shadow-sm);
+}
+
+.orbis-search-input {
+    padding: 10px 16px;
+    border: 1px solid var(--orbis-border);
+    border-radius: 10px;
+    width: 250px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.orbis-search-input:focus {
+    border-color: var(--orbis-primary);
+    outline: none;
+}
+
+/* App Launchpad Grid */
 .orbis-app-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 30px;
-    margin-top: 40px;
 }
 
 .orbis-app-tile {
     background: #fff;
     padding: 40px 20px;
-    border-radius: 20px;
+    border-radius: var(--orbis-radius-lg);
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-    box-shadow: var(--orbis-shadow);
-    border: 1px solid #edf2f7;
+    border: 1px solid var(--orbis-border);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.orbis-app-tile::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--app-color);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
 }
 
 .orbis-app-tile:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    transform: translateY(-10px) scale(1.02);
     border-color: var(--app-color);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+}
+
+.orbis-app-tile > * {
+    position: relative;
+    z-index: 1;
 }
 
 .orbis-app-icon {
-    width: 70px;
-    height: 70px;
+    width: 64px;
+    height: 64px;
     background: var(--app-color);
     color: #fff;
     border-radius: 18px;
@@ -145,67 +253,132 @@ body.orbis-dashboard-active {
     align-items: center;
     justify-content: center;
     margin: 0 auto 20px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
 }
 
 .orbis-app-icon .dashicons {
-    font-size: 35px;
-    width: 35px;
-    height: 35px;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
 }
 
 .orbis-app-label {
     font-weight: 700;
-    color: #2d3748;
     font-size: 18px;
+    color: var(--orbis-secondary);
 }
 
-/* App Header */
-.orbis-app-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 40px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid #e2e8f0;
+/* App View Containers */
+.orbis-app-view {
+    display: none;
+    animation: orbisFadeIn 0.4s ease forwards;
 }
 
-.orbis-app-header h2 {
-    margin: 0;
-    color: #2d3748;
-    font-size: 28px;
+.orbis-app-view.active {
+    display: block;
 }
 
-/* Master Footer */
-.orbis-master-footer {
-    background: #fff;
-    padding: 20px 30px;
-    border-top: 1px solid #eee;
-    text-align: center;
+@keyframes orbisFadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* RTL Support */
+/* RTL Precision */
+[dir="rtl"] {
+    text-align: right;
+}
+
 [dir="rtl"] .orbis-dashboard-layout {
     flex-direction: row-reverse;
 }
 
-[dir="rtl"] .orbis-master-sidebar {
-    text-align: right;
+[dir="rtl"] .orbis-sidebar-nav li a {
+    border-left: none;
+    border-right: 4px solid transparent;
 }
 
-[dir="rtl"] .orbis-app-header {
-    flex-direction: row-reverse;
+[dir="rtl"] .orbis-sidebar-nav li.active a {
+    border-right: 4px solid var(--orbis-primary);
+    border-left: none;
 }
 
+[dir="rtl"] .orbis-app-header,
 [dir="rtl"] .orbis-app-toolbar {
     flex-direction: row-reverse;
 }
 
-/* Admin Specific */
-.orbis-admin-dash-header {
-    background: #007cba;
-    color: #fff;
-    padding: 20px 40px;
+[dir="rtl"] .orbis-header-inner {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .orbis-user-meta {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .orbis-btn {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .dashicons {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
+/* Modals */
+.orbis-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.orbis-modal-content {
+    background: #fff;
+    border-radius: var(--orbis-radius-lg);
+    width: 90%;
+    max-width: 600px;
+    padding: 40px;
+    box-shadow: var(--orbis-shadow-lg);
+}
+
+/* Utilities */
+.orbis-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #f7f7f7 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: orbisSkeleton 1.5s infinite;
+}
+
+@keyframes orbisSkeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Loading Overlay */
+.orbis-loading-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    border-radius: inherit;
+}
+
+.orbis-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--orbis-border);
+    border-top: 3px solid var(--orbis-primary);
+    border-radius: 50%;
+    animation: orbisSpin 0.8s linear infinite;
+}
+
+@keyframes orbisSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

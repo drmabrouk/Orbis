@@ -1,10 +1,11 @@
 <?php
 /**
- * Provide a public-facing view for the plugin
+ * Polished Master Dashboard for Orbis
  */
 $site_title = get_option( 'orbis_site_title', get_bloginfo('name') );
 $logo_url = get_option( 'orbis_site_logo', '' );
 $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis System' );
+$current_lang = $GLOBALS['orbis_translator']->get_current_language();
 
 $apps = array(
     'notes'         => array('label' => orbis_t('app_notes', 'Notes', 'ملاحظات', 'Apps'), 'icon' => 'dashicons-welcome-write-blog', 'color' => '#3498db'),
@@ -24,8 +25,7 @@ $apps = array(
 );
 ?>
 
-<div class="orbis-full-dashboard" <?php if ($GLOBALS['orbis_translator']->get_current_language() === 'ar') echo 'dir="rtl"'; ?>>
-    <!-- Full Site Header -->
+<div class="orbis-full-dashboard <?php echo ($current_lang === 'ar') ? 'rtl' : 'ltr'; ?>" <?php if ($current_lang === 'ar') echo 'dir="rtl"'; ?>>
     <header class="orbis-master-header">
         <div class="orbis-header-inner">
             <div class="orbis-site-brand">
@@ -36,17 +36,16 @@ $apps = array(
             </div>
             <div class="orbis-user-meta">
                 <span><?php echo sprintf( orbis_t('hello_user', 'Hello, %s', 'مرحباً، %s', 'Dashboard'), wp_get_current_user()->display_name ); ?></span>
-                <a href="<?php echo wp_logout_url( home_url() ); ?>" class="button"><?php echo orbis_t('logout', 'Logout', 'تسجيل الخروج', 'Auth'); ?></a>
+                <a href="<?php echo wp_logout_url( home_url() ); ?>" class="orbis-btn orbis-btn-primary" style="margin-left: 20px;"><?php echo orbis_t('logout', 'Logout', 'تسجيل الخروج', 'Auth'); ?></a>
             </div>
         </div>
     </header>
 
     <div class="orbis-dashboard-layout">
-        <!-- Sidebar Navigation -->
         <aside class="orbis-master-sidebar">
             <nav class="orbis-sidebar-nav">
                 <ul>
-                    <li class="active"><a href="#" class="orbis-app-link" data-app="launchpad"><?php echo orbis_t('dash_launchpad', 'App Launchpad', 'مشغل التطبيقات', 'Navigation'); ?></a></li>
+                    <li class="active"><a href="#" class="orbis-app-link" data-app="launchpad"><span class="dashicons dashicons-dashboard"></span> <?php echo orbis_t('dash_launchpad', 'Dashboard', 'لوحة التحكم', 'Navigation'); ?></a></li>
                     <?php foreach ($apps as $slug => $app): ?>
                         <li><a href="#" class="orbis-app-link" data-app="<?php echo $slug; ?>"><span class="dashicons <?php echo $app['icon']; ?>"></span> <?php echo $app['label']; ?></a></li>
                     <?php endforeach; ?>
@@ -54,15 +53,12 @@ $apps = array(
             </nav>
         </aside>
 
-        <!-- Main Workspace -->
         <main class="orbis-master-content">
-
-            <!-- App Launchpad -->
             <div id="orbis-launchpad" class="orbis-app-view active">
-                <section class="orbis-dashboard-section">
-                    <h2><?php echo orbis_t('welcome_workspace', 'Welcome to your Orbis Workspace', 'مرحباً بك في مساحة عمل أوربيس الخاصة بك', 'Dashboard'); ?></h2>
-                    <p><?php echo orbis_t('workspace_desc', 'Manage your personal and business productivity in one professional environment.', 'قم بإدارة إنتاجيتك الشخصية والمهنية في بيئة احترافية واحدة.', 'Dashboard'); ?></p>
-                </section>
+                <div class="orbis-welcome-section">
+                    <h2 style="font-size: 32px; margin-bottom: 8px;"><?php echo orbis_t('welcome_workspace', 'Welcome back', 'مرحباً بعودتك', 'Dashboard'); ?>, <?php echo wp_get_current_user()->first_name; ?></h2>
+                    <p style="color: var(--orbis-text-muted); font-size: 18px;"><?php echo orbis_t('workspace_desc', 'Your unified management environment is ready.', 'بيئة الإدارة الموحدة الخاصة بك جاهزة.', 'Dashboard'); ?></p>
+                </div>
 
                 <div class="orbis-app-grid">
                     <?php foreach ($apps as $slug => $app): ?>
@@ -76,12 +72,11 @@ $apps = array(
                 </div>
             </div>
 
-            <!-- Dynamic App Views -->
             <?php foreach ($apps as $slug => $app): ?>
                 <div id="orbis-app-<?php echo $slug; ?>" class="orbis-app-view">
                     <header class="orbis-app-header">
-                        <button class="orbis-back-to-launchpad button">&larr; <?php echo orbis_t('back_to_apps', 'Back to Apps', 'العودة للتطبيقات', 'Navigation'); ?></button>
-                        <h2><?php echo $app['label']; ?></h2>
+                        <button class="orbis-back-to-launchpad orbis-btn" style="background: #edf2f7;">&larr; <?php echo orbis_t('back', 'Back', 'رجوع', 'General'); ?></button>
+                        <h2 style="font-size: 28px; font-weight: 800;"><?php echo $app['label']; ?></h2>
                     </header>
                     <div class="orbis-app-content">
                         <?php
@@ -89,20 +84,16 @@ $apps = array(
                         if (file_exists($app_path)) {
                             include $app_path;
                         } else {
-                            echo '<p>' . orbis_t('app_coming_soon', 'This application is coming soon.', 'هذا التطبيق سيتوفر قريباً.', 'Apps') . '</p>';
+                            echo '<div class="orbis-card" style="text-align:center; padding: 100px 0;"><p>' . orbis_t('app_coming_soon', 'This application is being polished.', 'هذا التطبيق قيد التحسين.', 'Apps') . '</p></div>';
                         }
                         ?>
                     </div>
                 </div>
             <?php endforeach; ?>
-
         </main>
     </div>
 
-    <!-- Full Site Footer -->
     <footer class="orbis-master-footer">
-        <div class="orbis-footer-inner">
-            <p><?php echo wp_kses_post($footer_text); ?></p>
-        </div>
+        <p><?php echo wp_kses_post($footer_text); ?></p>
     </footer>
 </div>

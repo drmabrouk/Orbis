@@ -5,24 +5,32 @@
 
         // App Switching Logic (SPA-like)
         function switchApp(appSlug) {
-            $('.orbis-app-view').removeClass('active');
-            $('.orbis-sidebar-nav li').removeClass('active');
+            const $target = (appSlug === 'launchpad') ? $('#orbis-launchpad') : $(`#orbis-app-${appSlug}`);
 
-            if (appSlug === 'launchpad') {
-                $('#orbis-launchpad').addClass('active');
-                $('.orbis-sidebar-nav li').first().addClass('active');
-            } else {
-                $(`#orbis-app-${appSlug}`).addClass('active');
-                $(`.orbis-sidebar-nav a[data-app="${appSlug}"]`).parent().addClass('active');
+            $('.orbis-app-view').fadeOut(200, function() {
+                $('.orbis-app-view').removeClass('active');
+                $('.orbis-sidebar-nav li').removeClass('active');
 
-                // Trigger app-specific loading
-                if (appSlug === 'notes') loadNotes();
-                if (appSlug === 'tasks') loadTasks();
-                if (appSlug === 'passwords') loadPasswords();
-                if (appSlug === 'finance') loadFinance();
-            }
+                if (appSlug === 'launchpad') {
+                    $('#orbis-launchpad').fadeIn(300).addClass('active');
+                    $('.orbis-sidebar-nav li').first().addClass('active');
+                } else {
+                    $target.fadeIn(300).addClass('active');
+                    $(`.orbis-sidebar-nav a[data-app="${appSlug}"]`).parent().addClass('active');
 
-            // Scroll to top of content
+                    // Show loading state if needed
+                    $target.find('.orbis-app-content').append('<div class="orbis-loading-overlay"><div class="orbis-spinner"></div></div>');
+
+                    // Trigger app-specific loading
+                    if (appSlug === 'notes') loadNotes();
+                    if (appSlug === 'tasks') loadTasks();
+                    if (appSlug === 'passwords') loadPasswords();
+                    if (appSlug === 'finance') loadFinance();
+
+                    setTimeout(() => $target.find('.orbis-loading-overlay').fadeOut(), 400);
+                }
+            });
+
             $('.orbis-master-content').animate({ scrollTop: 0 }, 'fast');
         }
 
