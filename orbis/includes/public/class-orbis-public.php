@@ -75,6 +75,18 @@ class Orbis_Public {
         add_action( 'wp_ajax_orbis_save_site_settings', array( $this, 'handle_save_site_settings' ) );
         add_action( 'wp_ajax_orbis_save_translations', array( $this, 'handle_save_translations' ) );
 
+        // Notes AJAX
+        add_action( 'wp_ajax_orbis_get_notes', array( $this, 'handle_get_notes' ) );
+        add_action( 'wp_ajax_orbis_save_note', array( $this, 'handle_save_note' ) );
+        add_action( 'wp_ajax_orbis_delete_note', array( $this, 'handle_delete_note' ) );
+        add_action( 'wp_ajax_orbis_toggle_pin_note', array( $this, 'handle_toggle_pin_note' ) );
+
+        // Tasks AJAX
+        add_action( 'wp_ajax_orbis_get_tasks', array( $this, 'handle_get_tasks' ) );
+        add_action( 'wp_ajax_orbis_save_task', array( $this, 'handle_save_task' ) );
+        add_action( 'wp_ajax_orbis_toggle_task', array( $this, 'handle_toggle_task' ) );
+        add_action( 'wp_ajax_orbis_delete_task', array( $this, 'handle_delete_task' ) );
+
 	}
 
 	/**
@@ -415,6 +427,169 @@ class Orbis_Public {
         }
 
         wp_send_json_success( array( 'message' => 'Site settings updated successfully.' ) );
+    }
+
+    /**
+     * Get Notes for current user.
+     */
+    public function handle_get_notes() {
+        $user_id = get_current_user_id();
+        $notes = get_posts( array(
+            'post_type' => 'orbis_note',
+            'author'    => $user_id,
+            'posts_per_page' => -1,
+            'orderby'   => 'meta_value_num date',
+            'meta_key'  => '_orbis_note_pinned',
+            'order'     => 'DESC'
+        ) );
+
+        $data = array();
+        foreach ( $notes as $n ) {
+            $data[] = array(
+                'id'       => $n->ID,
+                'title'    => $n->post_title,
+                'content'  => $n->post_content,
+                'pinned'   => get_post_meta( $n->ID, '_orbis_note_pinned', true ) == '1',
+                'category' => wp_get_post_terms( $n->ID, 'orbis_note_category', array( 'fields' => 'names' ) )
+            );
+        }
+
+        wp_send_json_success( $data );
+    }
+
+    /**
+     * Save or update a note.
+     */
+    public function handle_save_note() {
+        $user_id = get_current_user_id();
+        $note_id = isset( $_POST['note_id'] ) ? intval( $_POST['note_id'] ) : 0;
+        $title   = sanitize_text_field( $_POST['note_title'] );
+        $content = wp_kses_post( $_POST['note_content'] );
+
+        $args = array(
+            'post_title'   => $title,
+            'post_content' => $content,
+            'post_type'    => 'orbis_note',
+            'post_status'  => 'publish',
+            'post_author'  => $user_id
+        );
+
+        if ( $note_id > 0 ) {
+            $args['ID'] = $note_id;
+            wp_update_post( $args );
+        } else {
+            $note_id = wp_insert_post( $args );
+        }
+
+        wp_send_json_success( array( 'message' => 'Note saved!', 'id' => $note_id ) );
+    }
+
+    /**
+     * Delete a note.
+     */
+    public function handle_delete_note() {
+        $note_id = intval( $_POST['note_id'] );
+        if ( get_post_field( 'post_author', $note_id ) == get_current_user_id() ) {
+            wp_delete_post( $note_id, true );
+            wp_send_json_success();
+        }
+        wp_send_json_error();
+    }
+
+    /**
+     * Toggle pin status.
+     */
+    public function handle_toggle_pin_note() {
+        $note_id = intval( $_POST['note_id'] );
+        if ( get_post_field( 'post_author', $note_id ) == get_current_user_id() ) {
+            $pinned = get_post_meta( $note_id, '_orbis_note_pinned', true ) == '1' ? '0' : '1';
+            update_post_meta( $note_id, '_orbis_note_pinned', $pinned );
+            wp_send_json_success( array( 'pinned' => $pinned == '1' ) );
+        }
+        wp_send_json_error();
+    }
+
+    /**
+     * Get Tasks for current user.
+     */
+    public function handle_get_tasks() {
+        $user_id = get_current_user_id();
+        $tasks = get_posts( array(
+            'post_type' => 'orbis_task',
+            'author'    => $user_id,
+            'posts_per_page' => -1,
+            'orderby'   => 'date',
+            'order'     => 'DESC'
+        ) );
+
+        $data = array();
+        foreach ( $tasks as $t ) {
+            $data[] = array(
+                'id'       => $t->ID,
+                'title'    => $t->post_title,
+                'deadline' => get_post_meta( $t->ID, '_orbis_task_deadline', true ),
+                'priority' => get_post_meta( $t->ID, '_orbis_task_priority', true ),
+                'status'   => get_post_meta( $t->ID, '_orbis_task_status', true ) ?: 'pending'
+            );
+        }
+
+        wp_send_json_success( $data );
+    }
+
+    /**
+     * Save or update a task.
+     */
+    public function handle_save_task() {
+        $user_id = get_current_user_id();
+        $task_id = isset( $_POST['task_id'] ) ? intval( $_POST['task_id'] ) : 0;
+        $title   = sanitize_text_field( $_POST['task_title'] );
+        $deadline = sanitize_text_field( $_POST['task_deadline'] );
+        $priority = sanitize_text_field( $_POST['task_priority'] );
+
+        $args = array(
+            'post_title'   => $title,
+            'post_type'    => 'orbis_task',
+            'post_status'  => 'publish',
+            'post_author'  => $user_id
+        );
+
+        if ( $task_id > 0 ) {
+            $args['ID'] = $task_id;
+            wp_update_post( $args );
+        } else {
+            $task_id = wp_insert_post( $args );
+            update_post_meta( $task_id, '_orbis_task_status', 'pending' );
+        }
+
+        update_post_meta( $task_id, '_orbis_task_deadline', $deadline );
+        update_post_meta( $task_id, '_orbis_task_priority', $priority );
+
+        wp_send_json_success( array( 'message' => 'Task saved!', 'id' => $task_id ) );
+    }
+
+    /**
+     * Toggle task status.
+     */
+    public function handle_toggle_task() {
+        $task_id = intval( $_POST['task_id'] );
+        if ( get_post_field( 'post_author', $task_id ) == get_current_user_id() ) {
+            $status = get_post_meta( $task_id, '_orbis_task_status', true ) === 'completed' ? 'pending' : 'completed';
+            update_post_meta( $task_id, '_orbis_task_status', $status );
+            wp_send_json_success( array( 'status' => $status ) );
+        }
+        wp_send_json_error();
+    }
+
+    /**
+     * Delete a task.
+     */
+    public function handle_delete_task() {
+        $task_id = intval( $_POST['task_id'] );
+        if ( get_post_field( 'post_author', $task_id ) == get_current_user_id() ) {
+            wp_delete_post( $task_id, true );
+            wp_send_json_success();
+        }
+        wp_send_json_error();
     }
 
     /**

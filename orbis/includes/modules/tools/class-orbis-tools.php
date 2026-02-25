@@ -26,6 +26,7 @@ class Orbis_Tools {
                 <button>4</button><button>5</button><button>6</button><button>*</button>
                 <button>1</button><button>2</button><button>3</button><button>-</button>
                 <button>0</button><button>.</button><button>=</button><button>+</button>
+                <button style="grid-column: span 4; background: #e74c3c; color: #fff;">C</button>
             </div>
         </div>
         <?php

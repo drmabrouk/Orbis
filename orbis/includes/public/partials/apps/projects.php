@@ -4,29 +4,58 @@
  */
 ?>
 <div class="orbis-app-projects">
-    <div class="orbis-projects-workspace">
-        <div class="orbis-project-card">
-            <h3>Orbis System V1</h3>
-            <div class="orbis-progress-container">
-                <div class="orbis-progress-label"><?php echo orbis_t('progress', 'Overall Progress', 'التقدم الإجمالي', 'Projects'); ?>: 75%</div>
-                <div class="orbis-progress-bar"><div class="orbis-progress-fill" style="width: 75%;"></div></div>
-            </div>
-            <div class="orbis-subtasks">
-                <h4><?php echo orbis_t('subtasks', 'Sub-tasks', 'المهام الفرعية', 'Projects'); ?></h4>
-                <ul>
-                    <li><span class="dashicons dashicons-yes-alt" style="color:green;"></span> Core Architecture</li>
-                    <li><span class="dashicons dashicons-yes-alt" style="color:green;"></span> Auth System</li>
-                    <li><span class="dashicons dashicons-clock"></span> App Launchpad</li>
-                </ul>
-            </div>
-        </div>
+    <div class="orbis-app-toolbar">
+        <button class="button button-primary"><?php echo orbis_t('new_project', 'New Project', 'مشروع جديد', 'Projects'); ?></button>
+    </div>
+
+    <div class="orbis-projects-grid">
+        <?php
+        $projects = get_posts( array(
+            'post_type' => 'orbis_project',
+            'author'    => get_current_user_id(),
+            'posts_per_page' => -1
+        ) );
+
+        if ( $projects ) :
+            foreach ( $projects as $p ) :
+                $progress = get_post_meta( $p->ID, '_orbis_project_progress', true ) ?: 0;
+                ?>
+                <div class="orbis-project-card">
+                    <div class="project-header">
+                        <h4><?php echo esc_html($p->post_title); ?></h4>
+                        <span class="status-dot active"></span>
+                    </div>
+                    <p><?php echo wp_trim_words( $p->post_content, 15 ); ?></p>
+
+                    <div class="orbis-progress-container">
+                        <div class="orbis-progress-label"><?php echo orbis_t('progress', 'Progress', 'التقدم', 'Projects'); ?>: <?php echo $progress; ?>%</div>
+                        <div class="orbis-progress-bar"><div class="orbis-progress-fill" style="width: <?php echo $progress; ?>%;"></div></div>
+                    </div>
+
+                    <div class="project-footer">
+                        <span><span class="dashicons dashicons-calendar-alt"></span> Mar 15</span>
+                        <div class="project-actions">
+                            <span class="dashicons dashicons-edit"></span>
+                            <span class="dashicons dashicons-trash"></span>
+                        </div>
+                    </div>
+                </div>
+                <?php
+            endforeach;
+        else :
+            echo '<p>' . orbis_t('no_projects', 'No projects active. Create one to start tracking!', 'لا توجد مشاريع نشطة. أنشئ واحداً لبدء التتبع!', 'Projects') . '</p>';
+        endif;
+        ?>
     </div>
 </div>
 
 <style>
-.orbis-project-card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: var(--orbis-shadow); border: 1px solid #e2e8f0; }
-.orbis-progress-container { margin: 20px 0; }
-.orbis-progress-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-.orbis-subtasks ul { list-style: none; padding: 0; }
-.orbis-subtasks li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+.orbis-projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-top: 20px; }
+.project-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.project-header h4 { margin: 0; font-size: 20px; }
+.status-dot { width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; }
+.project-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; color: #718096; font-size: 13px; }
+.project-actions { display: flex; gap: 10px; }
+.project-actions .dashicons { cursor: pointer; }
+.project-actions .dashicons:hover { color: var(--orbis-primary); }
 </style>

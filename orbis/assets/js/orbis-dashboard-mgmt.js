@@ -14,6 +14,10 @@
             } else {
                 $(`#orbis-app-${appSlug}`).addClass('active');
                 $(`.orbis-sidebar-nav a[data-app="${appSlug}"]`).parent().addClass('active');
+
+                // Trigger app-specific loading
+                if (appSlug === 'notes') loadNotes();
+                if (appSlug === 'tasks') loadTasks();
             }
 
             // Scroll to top of content
@@ -121,6 +125,214 @@
             document.documentElement.style.setProperty('--orbis-primary', color);
             $('.orbis-site-title').css('color', color);
         });
+
+        /* --- Notes App Logic --- */
+        function loadNotes() {
+            $.post(orbis_params.ajax_url, { action: 'orbis_get_notes' }, function(response) {
+                if (response.success) {
+                    let html = '';
+                    response.data.forEach(note => {
+                        html += `
+                            <div class="orbis-note-card ${note.pinned ? 'pinned' : ''}" data-id="${note.id}">
+                                <h4>${note.title}</h4>
+                                <p>${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
+                                <div class="orbis-note-meta">
+                                    <div class="orbis-note-actions">
+                                        <span class="dashicons ${note.pinned ? 'dashicons-star-filled' : 'dashicons-star-empty'} orbis-pin-note" title="Pin/Unpin"></span>
+                                        <span class="dashicons dashicons-edit orbis-edit-note" title="Edit"></span>
+                                        <span class="dashicons dashicons-trash orbis-delete-note" title="Delete"></span>
+                                    </div>
+                                    <small>${note.category.join(', ')}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#orbis-notes-list').html(html || '<p>No notes found. Create your first note!</p>');
+                }
+            });
+        }
+
+        // Open Modal for New Note
+        $('#orbis-new-note-btn').on('click', function() {
+            $('#orbis-note-id').val('0');
+            $('#orbis-note-title-field').val('');
+            $('#orbis-note-editor').html('');
+            $('#orbis-note-modal-title').text('Create New Note');
+            $('#orbis-note-modal').fadeIn();
+        });
+
+        // Close Modal
+        $('.orbis-close-modal').on('click', function() {
+            $('.orbis-modal').fadeOut();
+        });
+
+        // Save Note
+        $('#orbis-note-form').on('submit', function(e) {
+            e.preventDefault();
+            const data = {
+                action: 'orbis_save_note',
+                note_id: $('#orbis-note-id').val(),
+                note_title: $('#orbis-note-title-field').val(),
+                note_content: $('#orbis-note-editor').html()
+            };
+
+            $.post(orbis_params.ajax_url, data, function(response) {
+                if (response.success) {
+                    $('#orbis-note-modal').fadeOut();
+                    loadNotes();
+                }
+            });
+        });
+
+        // Edit Note
+        $(document).on('click', '.orbis-edit-note', function() {
+            const $card = $(this).closest('.orbis-note-card');
+            const id = $card.data('id');
+            const title = $card.find('h4').text();
+
+            // We'd ideally fetch full content via AJAX if snippet isn't enough
+            // For now, let's just use what's in the card or fetch
+            $.post(orbis_params.ajax_url, { action: 'orbis_get_notes' }, function(response) {
+                const note = response.data.find(n => n.id == id);
+                if (note) {
+                    $('#orbis-note-id').val(note.id);
+                    $('#orbis-note-title-field').val(note.title);
+                    $('#orbis-note-editor').html(note.content);
+                    $('#orbis-note-modal-title').text('Edit Note');
+                    $('#orbis-note-modal').fadeIn();
+                }
+            });
+        });
+
+        // Pin Note
+        $(document).on('click', '.orbis-pin-note', function() {
+            const id = $(this).closest('.orbis-note-card').data('id');
+            $.post(orbis_params.ajax_url, { action: 'orbis_toggle_pin_note', note_id: id }, function() {
+                loadNotes();
+            });
+        });
+
+        // Delete Note
+        $(document).on('click', '.orbis-delete-note', function() {
+            if (!confirm('Are you sure you want to delete this note?')) return;
+            const id = $(this).closest('.orbis-note-card').data('id');
+            $.post(orbis_params.ajax_url, { action: 'orbis_delete_note', note_id: id }, function() {
+                loadNotes();
+            });
+        });
+
+        /* --- Tasks App Logic --- */
+        let taskFilter = 'all';
+
+        function loadTasks() {
+            $.post(orbis_params.ajax_url, { action: 'orbis_get_tasks' }, function(response) {
+                if (response.success) {
+                    let html = '';
+                    response.data.forEach(task => {
+                        if (taskFilter !== 'all' && task.status !== taskFilter) return;
+
+                        html += `
+                            <div class="orbis-task-item ${task.status === 'completed' ? 'completed' : ''}" data-id="${task.id}">
+                                <input type="checkbox" class="orbis-toggle-task" ${task.status === 'completed' ? 'checked' : ''}>
+                                <div class="orbis-task-details">
+                                    <span class="orbis-task-title">${task.title}</span>
+                                    <div class="orbis-task-meta">
+                                        <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                                        ${task.deadline ? `<span>Due: ${task.deadline}</span>` : ''}
+                                        <span class="dashicons dashicons-trash orbis-delete-task" style="cursor:pointer; font-size:16px;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#orbis-tasks-list').html(html || '<p>No tasks found. Time to relax!</p>');
+                }
+            });
+        }
+
+        $('#orbis-add-task-btn').on('click', function() {
+            $('#orbis-task-id').val('0');
+            $('#orbis-task-title-field').val('');
+            $('#orbis-task-deadline-field').val('');
+            $('#orbis-task-modal-title').text('New Task');
+            $('#orbis-task-modal').fadeIn();
+        });
+
+        $('#orbis-task-form').on('submit', function(e) {
+            e.preventDefault();
+            const data = {
+                action: 'orbis_save_task',
+                task_id: $('#orbis-task-id').val(),
+                task_title: $('#orbis-task-title-field').val(),
+                task_deadline: $('#orbis-task-deadline-field').val(),
+                task_priority: $('#orbis-task-priority-field').val()
+            };
+
+            $.post(orbis_params.ajax_url, data, function(response) {
+                if (response.success) {
+                    $('#orbis-task-modal').fadeOut();
+                    loadTasks();
+                }
+            });
+        });
+
+        $(document).on('change', '.orbis-toggle-task', function() {
+            const id = $(this).closest('.orbis-task-item').data('id');
+            $.post(orbis_params.ajax_url, { action: 'orbis_toggle_task', task_id: id }, function() {
+                loadTasks();
+            });
+        });
+
+        $(document).on('click', '.orbis-delete-task', function() {
+            if (!confirm('Delete this task?')) return;
+            const id = $(this).closest('.orbis-task-item').data('id');
+            $.post(orbis_params.ajax_url, { action: 'orbis_delete_task', task_id: id }, function() {
+                loadTasks();
+            });
+        });
+
+        $('.orbis-task-filters button').on('click', function() {
+            $('.orbis-task-filters button').removeClass('active');
+            $(this).addClass('active');
+            taskFilter = $(this).data('filter');
+            loadTasks();
+        });
+
+        /* --- Utilities & Clocks Logic --- */
+        let calcExpression = '';
+        $(document).on('click', '.orbis-calc-grid button', function() {
+            const val = $(this).text();
+            const $screen = $('#orbis-calc-screen');
+
+            if (val === '=') {
+                try {
+                    calcExpression = eval(calcExpression).toString();
+                } catch (e) {
+                    calcExpression = 'Error';
+                }
+            } else if (val === 'C') {
+                calcExpression = '';
+            } else {
+                calcExpression += val;
+            }
+            $screen.text(calcExpression || '0');
+        });
+
+        // Real-time Clocks
+        function updateClocks() {
+            const now = new Date();
+            $('.orbis-clock-val').each(function() {
+                const offset = parseFloat($(this).data('offset'));
+                const time = new Date(now.getTime() + (offset * 3600000));
+                $(this).text(time.toUTCString().split(' ')[4]);
+            });
+        }
+        setInterval(updateClocks, 1000);
+
+        // Initial Load
+        if ($('#orbis-notes-list').length) loadNotes();
+        if ($('#orbis-tasks-list').length) loadTasks();
+        updateClocks();
     });
 
 })(jQuery);
