@@ -39,6 +39,7 @@ $current_lang = $GLOBALS['orbis_translator']->get_current_language();
                     <li><a href="#structure" data-tab="structure"><i class="fa-solid fa-sitemap"></i> <?php echo orbis_t('structure_mgmt', 'System Structure', 'هيكل النظام', 'Admin'); ?></a></li>
                     <li><a href="#appearance" data-tab="appearance"><i class="fa-solid fa-palette"></i> <?php echo orbis_t('appearance', 'Visual Identity', 'الهوية البصرية', 'Admin'); ?></a></li>
                     <li><a href="#translations" data-tab="translations"><i class="fa-solid fa-language"></i> <?php echo orbis_t('translations', 'Localization', 'الترجمات', 'Admin'); ?></a></li>
+                    <li><a href="#licensing" data-tab="licensing"><i class="fa-solid fa-key"></i> <?php echo orbis_t('licensing', 'Licensing & Updates', 'الترخيص والتحديثات', 'Admin'); ?></a></li>
                     <li><a href="#users" data-tab="users"><i class="fa-solid fa-users-gear"></i> <?php echo orbis_t('user_mgmt', 'User Management', 'إدارة المستخدمين', 'Admin'); ?></a></li>
                 </ul>
             </nav>
@@ -84,7 +85,26 @@ $current_lang = $GLOBALS['orbis_translator']->get_current_language();
                     </form>
                 </section>
 
-                <!-- Other sections would follow similar premium patterns... -->
+                <!-- Structure Tab -->
+                <section id="orbis-tab-structure" class="orbis-admin-tab-section">
+                    <header class="orbis-admin-section-header">
+                        <h3 class="orbis-admin-title"><?php echo orbis_t('structure_mgmt', 'System Structure', 'هيكل النظام', 'Admin'); ?></h3>
+                    </header>
+                    <p><?php echo orbis_t('structure_desc', 'Advanced architectural controls are being finalized.', 'يجري وضع اللمسات الأخيرة على الضوابط المعمارية المتقدمة.', 'Admin'); ?></p>
+                </section>
+
+                <!-- Appearance Tab -->
+                <section id="orbis-tab-appearance" class="orbis-admin-tab-section">
+                    <header class="orbis-admin-section-header">
+                        <h3 class="orbis-admin-title"><?php echo orbis_t('visual_identity', 'Visual Identity', 'الهوية البصرية', 'Admin'); ?></h3>
+                    </header>
+                    <div class="orbis-auth-form-group">
+                        <label><?php echo orbis_t('primary_color', 'Brand Primary Color', 'لون العلامة التجارية الأساسي', 'Admin'); ?></label>
+                        <input type="color" name="orbis_primary_color" value="<?php echo esc_attr($primary_color); ?>" class="orbis-input" style="height: 50px; padding: 5px;">
+                    </div>
+                </section>
+
+                <!-- Translations Tab -->
                 <section id="orbis-tab-translations" class="orbis-admin-tab-section">
                      <header class="orbis-admin-section-header">
                         <h3 class="orbis-admin-title"><?php echo orbis_t('localization_center', 'Localization Center', 'مركز التعريب', 'Admin'); ?></h3>
@@ -92,8 +112,57 @@ $current_lang = $GLOBALS['orbis_translator']->get_current_language();
                     <div class="orbis-translation-filters">
                         <input type="text" id="orbis-translation-search" placeholder="<?php echo orbis_t('search_strings', 'Filter system keys...', 'تصفية المفاتيح...', 'Admin'); ?>" class="orbis-input">
                     </div>
-                    <!-- Translation list would be here, same as before but styled -->
                      <p style="margin-top: 20px; color: var(--orbis-text-muted);"><?php echo orbis_t('trans_placeholder', 'Translation grid is loading...', 'جاري تحميل جدول الترجمة...', 'Admin'); ?></p>
+                </section>
+
+                <!-- Licensing Tab -->
+                <section id="orbis-tab-licensing" class="orbis-admin-tab-section">
+                    <header class="orbis-admin-section-header">
+                        <h3 class="orbis-admin-title"><?php echo orbis_t('licensing_title', 'Licensing & System Status', 'الترخيص وحالة النظام', 'Admin'); ?></h3>
+                        <p class="orbis-admin-subtitle"><?php echo orbis_t('licensing_desc', 'Manage your enterprise license and monitor system updates.', 'إدارة ترخيص المؤسسة ومراقبة تحديثات النظام.', 'Admin'); ?></p>
+                    </header>
+
+                    <?php
+                    $license_data = $GLOBALS['orbis_license']->get_data();
+                    $is_active = $GLOBALS['orbis_license']->is_active();
+                    ?>
+
+                    <div class="orbis-license-card <?php echo $is_active ? 'active' : 'inactive'; ?>" style="padding: 25px; border-radius: 15px; background: <?php echo $is_active ? '#ecfdf5' : '#fff5f5'; ?>; border: 1px solid <?php echo $is_active ? '#10b981' : '#ef4444'; ?>; margin-bottom: 30px;">
+                        <div style="display:flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin:0; font-size: 18px; color: <?php echo $is_active ? '#065f46' : '#991b1b'; ?>;">
+                                    <?php echo $is_active ? orbis_t('license_active', 'License Active', 'الترخيص نشط', 'Admin') : orbis_t('license_inactive', 'License Inactive', 'الترخيص غير نشط', 'Admin'); ?>
+                                </h4>
+                                <?php if ($is_active): ?>
+                                    <p style="margin: 5px 0 0; font-size: 13px; color: #065f46;">Type: <?php echo esc_html($license_data['type']); ?> | Expires: <?php echo date('Y-m-d', $license_data['expires_at']); ?></p>
+                                <?php endif; ?>
+                            </div>
+                            <i class="fa-solid <?php echo $is_active ? 'fa-check-circle' : 'fa-times-circle'; ?>" style="font-size: 32px; color: <?php echo $is_active ? '#10b981' : '#ef4444'; ?>;"></i>
+                        </div>
+                    </div>
+
+                    <form id="orbis-license-form" class="orbis-admin-form">
+                        <div class="orbis-auth-form-group">
+                            <label><?php echo orbis_t('license_key_label', 'Enter License Key', 'أدخل مفتاح الترخيص', 'Admin'); ?></label>
+                            <input type="text" id="orbis_license_key" placeholder="XXXX-XXXX-XXXX-XXXX" value="<?php echo esc_attr($is_active ? $license_data['key'] : ''); ?>" class="orbis-input">
+                        </div>
+                        <button type="button" id="orbis-activate-license" class="orbis-btn-primary"><?php echo $is_active ? orbis_t('update_license', 'Update License', 'تحديث الترخيص', 'Admin') : orbis_t('activate_now', 'Activate Now', 'تفعيل الآن', 'Admin'); ?></button>
+                    </form>
+
+                    <div class="orbis-update-logs" style="margin-top: 50px;">
+                        <h4 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;"><?php echo orbis_t('system_logs', 'System Update History', 'سجل تحديثات النظام', 'Admin'); ?></h4>
+                        <div style="background: #1e293b; color: #cbd5e1; padding: 20px; border-radius: 12px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;">
+                            <?php
+                            $logs = array_reverse($GLOBALS['orbis_updates']->get_logs());
+                            foreach ($logs as $log): ?>
+                                <div style="margin-bottom: 8px; border-bottom: 1px solid #334155; padding-bottom: 8px;">
+                                    <span style="color: #38bdf8;">[<?php echo date('Y-m-d H:i:s', $log['time']); ?>]</span>
+                                    <span style="color: #4ade80;">v<?php echo esc_html($log['version']); ?>:</span>
+                                    <?php echo esc_html($log['message']); ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </section>
 
                 <div id="orbis-admin-mgmt-msg"></div>

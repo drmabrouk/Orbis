@@ -127,6 +127,9 @@ class Orbis {
          * Load Core Services
          */
         require_once plugin_dir_path( __FILE__ ) . 'class-orbis-translator.php';
+        require_once plugin_dir_path( __FILE__ ) . 'class-orbis-license.php';
+        require_once plugin_dir_path( __FILE__ ) . 'class-orbis-updates.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . '/classes/orbis-plugin-manager.php';
 
         /**
          * Load Application Classes
@@ -209,6 +212,13 @@ class Orbis {
         $this->loader->add_action( 'init', $plugin_translator, 'init' );
         // Make translator accessible globally
         $GLOBALS['orbis_translator'] = $plugin_translator;
+
+        $plugin_license = new Orbis_License();
+        $GLOBALS['orbis_license'] = $plugin_license;
+
+        $plugin_updates = new Orbis_Updates( $this->version );
+        $this->loader->add_action( 'admin_init', $plugin_updates, 'check_and_migrate' );
+        $GLOBALS['orbis_updates'] = $plugin_updates;
 
         // Modular Applications
         new Orbis_App_Notes( 'notes', 'Notes', $this->version );

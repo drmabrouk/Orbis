@@ -2,37 +2,32 @@
 
 /**
  * Fired during plugin activation
- *
- * @link       https://example.com
- * @since      1.0.0
- *
- * @package    Orbis
- * @subpackage Orbis/includes
- */
-
-/**
- * Fired during plugin activation.
- *
- * This class defines all code necessary to run during the plugin's activation.
- *
- * @since      1.0.0
- * @package    Orbis
- * @subpackage Orbis/includes
- * @author     Jules
  */
 class Orbis_Activator {
 
-	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
-	 *
-	 * @since    1.0.0
-	 */
 	public static function activate() {
         self::create_pages();
+        self::initialize_system();
         flush_rewrite_rules();
 	}
+
+    private static function initialize_system() {
+        // Set initial version
+        if ( ! get_option( 'orbis_version' ) ) {
+            update_option( 'orbis_version', ORBIS_VERSION );
+        }
+
+        // Initialize empty logs if not exist
+        if ( ! get_option( 'orbis_update_log' ) ) {
+            update_option( 'orbis_update_log', array(
+                array(
+                    'time'    => time(),
+                    'version' => ORBIS_VERSION,
+                    'message' => 'System successfully initialized.'
+                )
+            ) );
+        }
+    }
 
     private static function create_pages() {
         $pages = array(

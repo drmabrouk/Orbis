@@ -74,6 +74,7 @@ class Orbis_Public {
         add_action( 'wp_ajax_orbis_delete_account', array( $this, 'handle_delete_account' ) );
         add_action( 'wp_ajax_orbis_save_site_settings', array( $this, 'handle_save_site_settings' ) );
         add_action( 'wp_ajax_orbis_save_translations', array( $this, 'handle_save_translations' ) );
+        add_action( 'wp_ajax_orbis_activate_license', array( $this, 'handle_license_activation' ) );
 
 	}
 
@@ -430,6 +431,25 @@ class Orbis_Public {
         wp_delete_user( $user_id );
 
         wp_send_json_success( array( 'message' => 'Account deleted successfully. Redirecting...' ) );
+    }
+
+    /**
+     * Handle License Activation AJAX
+     */
+    public function handle_license_activation() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
+        }
+        check_ajax_referer( 'orbis_app_security', 'nonce' );
+
+        $license_key = sanitize_text_field( $_POST['license_key'] );
+        $result = $GLOBALS['orbis_license']->activate( $license_key );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( array( 'message' => 'License activated successfully!' ) );
     }
 
 }
