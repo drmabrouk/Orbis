@@ -88,11 +88,11 @@
 
             $msg.html('<p style="color:blue;">Registering...</p>');
 
-            $.post(orbis_auth_params.ajax_url, data, function(response) {
+            $.post(orbis_params.ajax_url, data, function(response) {
                 if (response.success) {
                     $msg.html('<p style="color:green;">' + response.data.message + '</p>');
                     setTimeout(function() {
-                        window.location.href = orbis_auth_params.dashboard_url;
+                        window.location.href = orbis_params.dashboard_url;
                     }, 2000);
                 } else {
                     $msg.html('<p style="color:red;">' + response.data.message + '</p>');

@@ -5,6 +5,19 @@
 $site_title = get_option( 'orbis_site_title', get_bloginfo('name') );
 $logo_url = get_option( 'orbis_site_logo', '' );
 $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis System' );
+
+$apps = array(
+    'notes'         => array('label' => orbis_t('app_notes', 'Notes', 'ملاحظات', 'Apps'), 'icon' => 'dashicons-welcome-write-blog', 'color' => '#3498db'),
+    'tasks'         => array('label' => orbis_t('app_tasks', 'Tasks', 'مهام', 'Apps'), 'icon' => 'dashicons-list-view', 'color' => '#2ecc71'),
+    'projects'      => array('label' => orbis_t('app_projects', 'Projects', 'مشاريع', 'Apps'), 'icon' => 'dashicons-portfolio', 'color' => '#9b59b6'),
+    'calendar'      => array('label' => orbis_t('app_calendar', 'Calendar', 'التقويم', 'Apps'), 'icon' => 'dashicons-calendar-alt', 'color' => '#e67e22'),
+    'documents'     => array('label' => orbis_t('app_docs', 'Documents', 'المستندات', 'Apps'), 'icon' => 'dashicons-media-document', 'color' => '#1abc9c'),
+    'notifications' => array('label' => orbis_t('app_notifs', 'Alerts', 'تنبيهات', 'Apps'), 'icon' => 'dashicons-bell', 'color' => '#f1c40f'),
+    'utilities'     => array('label' => orbis_t('app_utils', 'Utilities', 'أدوات المساعدة', 'Apps'), 'icon' => 'dashicons-calculator', 'color' => '#34495e'),
+    'forms'         => array('label' => orbis_t('app_forms', 'Forms', 'نماذج', 'Apps'), 'icon' => 'dashicons-feedback', 'color' => '#e74c3c'),
+    'clocks'        => array('label' => orbis_t('app_clocks', 'Clocks', 'ساعات', 'Apps'), 'icon' => 'dashicons-clock', 'color' => '#7f8c8d'),
+    'settings'      => array('label' => orbis_t('app_settings', 'Settings', 'إعدادات', 'Apps'), 'icon' => 'dashicons-admin-settings', 'color' => '#95a5a6'),
+);
 ?>
 
 <div class="orbis-full-dashboard" <?php if ($GLOBALS['orbis_translator']->get_current_language() === 'ar') echo 'dir="rtl"'; ?>>
@@ -29,67 +42,56 @@ $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis 
         <aside class="orbis-master-sidebar">
             <nav class="orbis-sidebar-nav">
                 <ul>
-                    <li><a href="#overview"><?php echo orbis_t('dash_overview', 'Dashboard Overview', 'نظرة عامة على لوحة التحكم', 'Navigation'); ?></a></li>
-                    <li><a href="#notes"><?php echo orbis_t('my_notes', 'My Notes', 'ملاحظاتي', 'Navigation'); ?></a></li>
-                    <li><a href="#tasks"><?php echo orbis_t('task_manager', 'Task Manager', 'مدير المهام', 'Navigation'); ?></a></li>
-                    <li><a href="#projects"><?php echo orbis_t('project_tracking', 'Project Tracking', 'تتبع المشاريع', 'Navigation'); ?></a></li>
-                    <li><a href="#calendar"><?php echo orbis_t('calendar', 'Calendar', 'التقويم', 'Navigation'); ?></a></li>
-                    <li><a href="#tools"><?php echo orbis_t('productivity_tools', 'Productivity Tools', 'أدوات الإنتاجية', 'Navigation'); ?></a></li>
-                    <li><a href="<?php echo site_url('orbis-profile'); ?>"><?php echo orbis_t('account_settings', 'Account Settings', 'إعدادات الحساب', 'Navigation'); ?></a></li>
+                    <li class="active"><a href="#" class="orbis-app-link" data-app="launchpad"><?php echo orbis_t('dash_launchpad', 'App Launchpad', 'مشغل التطبيقات', 'Navigation'); ?></a></li>
+                    <?php foreach ($apps as $slug => $app): ?>
+                        <li><a href="#" class="orbis-app-link" data-app="<?php echo $slug; ?>"><span class="dashicons <?php echo $app['icon']; ?>"></span> <?php echo $app['label']; ?></a></li>
+                    <?php endforeach; ?>
                 </ul>
             </nav>
         </aside>
 
         <!-- Main Workspace -->
         <main class="orbis-master-content">
-            <section id="overview" class="orbis-dashboard-section">
-                <h2><?php echo orbis_t('welcome_workspace', 'Welcome to your Orbis Workspace', 'مرحباً بك في مساحة عمل أوربيس الخاصة بك', 'Dashboard'); ?></h2>
-                <p><?php echo orbis_t('workspace_desc', 'Manage your personal and business productivity in one professional environment.', 'قم بإدارة إنتاجيتك الشخصية والمهنية في بيئة احترافية واحدة.', 'Dashboard'); ?></p>
-            </section>
 
-            <div class="orbis-dashboard-grid">
-                <section id="notes" class="orbis-dashboard-section card">
-                    <h3><?php echo orbis_t('recent_notes', 'Recent Notes', 'الملاحظات الأخيرة', 'Modules'); ?></h3>
-                    <?php
-                    $notes_query = new WP_Query( array(
-                        'post_type' => 'orbis_note',
-                        'posts_per_page' => 3,
-                        'author' => get_current_user_id()
-                    ) );
-                    if ( $notes_query->have_posts() ) :
-                        echo '<ul>';
-                        while ( $notes_query->have_posts() ) : $notes_query->the_post();
-                            echo '<li>' . get_the_title() . '</li>';
-                        endwhile;
-                        echo '</ul>';
-                        wp_reset_postdata();
-                    else :
-                        echo '<p>' . orbis_t('no_notes', 'No notes found.', 'لم يتم العثور على ملاحظات.', 'Modules') . '</p>';
-                    endif;
-                    ?>
+            <!-- App Launchpad -->
+            <div id="orbis-launchpad" class="orbis-app-view active">
+                <section class="orbis-dashboard-section">
+                    <h2><?php echo orbis_t('welcome_workspace', 'Welcome to your Orbis Workspace', 'مرحباً بك في مساحة عمل أوربيس الخاصة بك', 'Dashboard'); ?></h2>
+                    <p><?php echo orbis_t('workspace_desc', 'Manage your personal and business productivity in one professional environment.', 'قم بإدارة إنتاجيتك الشخصية والمهنية في بيئة احترافية واحدة.', 'Dashboard'); ?></p>
                 </section>
 
-                <section id="tasks" class="orbis-dashboard-section card">
-                    <h3><?php echo orbis_t('active_tasks', 'Active Tasks', 'المهام النشطة', 'Modules'); ?></h3>
-                    <?php
-                    $tasks_query = new WP_Query( array(
-                        'post_type' => 'orbis_task',
-                        'posts_per_page' => 3,
-                        'author' => get_current_user_id()
-                    ) );
-                    if ( $tasks_query->have_posts() ) :
-                        echo '<ul>';
-                        while ( $tasks_query->have_posts() ) : $tasks_query->the_post();
-                            echo '<li>' . get_the_title() . '</li>';
-                        endwhile;
-                        echo '</ul>';
-                        wp_reset_postdata();
-                    else :
-                        echo '<p>' . orbis_t('no_tasks', 'No tasks found.', 'لم يتم العثور على مهام.', 'Modules') . '</p>';
-                    endif;
-                    ?>
-                </section>
+                <div class="orbis-app-grid">
+                    <?php foreach ($apps as $slug => $app): ?>
+                        <div class="orbis-app-tile" data-app="<?php echo $slug; ?>" style="--app-color: <?php echo $app['color']; ?>;">
+                            <div class="orbis-app-icon">
+                                <span class="dashicons <?php echo $app['icon']; ?>"></span>
+                            </div>
+                            <div class="orbis-app-label"><?php echo $app['label']; ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
+
+            <!-- Dynamic App Views -->
+            <?php foreach ($apps as $slug => $app): ?>
+                <div id="orbis-app-<?php echo $slug; ?>" class="orbis-app-view">
+                    <header class="orbis-app-header">
+                        <button class="orbis-back-to-launchpad button">&larr; <?php echo orbis_t('back_to_apps', 'Back to Apps', 'العودة للتطبيقات', 'Navigation'); ?></button>
+                        <h2><?php echo $app['label']; ?></h2>
+                    </header>
+                    <div class="orbis-app-content">
+                        <?php
+                        $app_path = plugin_dir_path(__FILE__) . "apps/{$slug}.php";
+                        if (file_exists($app_path)) {
+                            include $app_path;
+                        } else {
+                            echo '<p>' . orbis_t('app_coming_soon', 'This application is coming soon.', 'هذا التطبيق سيتوفر قريباً.', 'Apps') . '</p>';
+                        }
+                        ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
         </main>
     </div>
 

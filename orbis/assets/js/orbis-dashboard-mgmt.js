@@ -3,6 +3,41 @@
 
     $(function() {
 
+        // App Switching Logic (SPA-like)
+        function switchApp(appSlug) {
+            $('.orbis-app-view').removeClass('active');
+            $('.orbis-sidebar-nav li').removeClass('active');
+
+            if (appSlug === 'launchpad') {
+                $('#orbis-launchpad').addClass('active');
+                $('.orbis-sidebar-nav li').first().addClass('active');
+            } else {
+                $(`#orbis-app-${appSlug}`).addClass('active');
+                $(`.orbis-sidebar-nav a[data-app="${appSlug}"]`).parent().addClass('active');
+            }
+
+            // Scroll to top of content
+            $('.orbis-master-content').animate({ scrollTop: 0 }, 'fast');
+        }
+
+        // Click on Tile
+        $('.orbis-app-tile').on('click', function() {
+            const app = $(this).data('app');
+            switchApp(app);
+        });
+
+        // Click on Sidebar Link
+        $('.orbis-app-link').on('click', function(e) {
+            e.preventDefault();
+            const app = $(this).data('app');
+            switchApp(app);
+        });
+
+        // Back to Launchpad button
+        $('.orbis-back-to-launchpad').on('click', function() {
+            switchApp('launchpad');
+        });
+
         // Tab Switching for Admin Dashboard
         $('.orbis-admin-sidebar a').on('click', function(e) {
             e.preventDefault();
@@ -23,7 +58,7 @@
 
             $msg.html('<p style="color:blue;">Saving settings...</p>');
 
-            $.post(orbis_auth_params.ajax_url, data, function(response) {
+            $.post(orbis_params.ajax_url, data, function(response) {
                 if (response.success) {
                     $msg.html('<p style="color:green;">' + response.data.message + '</p>');
                     // Live update title if visible

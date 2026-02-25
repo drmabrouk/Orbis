@@ -11,7 +11,7 @@
 
             $msg.html('<p style="color:blue;">Generating export...</p>');
 
-            $.post(orbis_auth_params.ajax_url, {
+            $.post(orbis_params.ajax_url, {
                 action: 'orbis_export_data',
                 orbis_account_nonce: nonce
             }, function(response) {
@@ -40,7 +40,7 @@
 
             $msg.html('<p style="color:blue;">Resetting account...</p>');
 
-            $.post(orbis_auth_params.ajax_url, {
+            $.post(orbis_params.ajax_url, {
                 action: 'orbis_reset_account',
                 orbis_account_nonce: nonce
             }, function(response) {
@@ -65,13 +65,13 @@
 
             $msg.html('<p style="color:blue;">Deleting account...</p>');
 
-            $.post(orbis_auth_params.ajax_url, {
+            $.post(orbis_params.ajax_url, {
                 action: 'orbis_delete_account',
                 orbis_account_nonce: nonce
             }, function(response) {
                 if (response.success) {
                     alert('Your account has been deleted. You will now be redirected.');
-                    window.location.href = orbis_auth_params.home_url;
+                    window.location.href = orbis_params.home_url;
                 } else {
                     $msg.html('<p style="color:red;">' + response.data.message + '</p>');
                 }
