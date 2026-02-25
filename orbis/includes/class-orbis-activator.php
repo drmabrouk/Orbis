@@ -48,6 +48,10 @@ class Orbis_Activator {
                 'title' => 'Orbis Dashboard',
                 'content' => '[orbis_dashboard]'
             ),
+            'orbis-profile' => array(
+                'title' => 'Orbis Profile',
+                'content' => '[orbis_profile]'
+            ),
         );
 
         foreach ( $pages as $slug => $page ) {

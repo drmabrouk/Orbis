@@ -20,6 +20,7 @@
                 <li><a href="#projects">Projects</a></li>
                 <li><a href="#calendar">Calendar</a></li>
                 <li><a href="#tools">Tools</a></li>
+                <li><a href="<?php echo site_url('orbis-profile'); ?>">Profile</a></li>
             </ul>
         </nav>
     </header>
