@@ -255,6 +255,15 @@ class Orbis {
             'show_in_rest' => true,
         ) );
 
+        // Form Responses CPT
+        register_post_type( 'orbis_response', array(
+            'labels'      => array( 'name' => 'Form Responses', 'singular_name' => 'Response' ),
+            'public'      => false,
+            'show_ui'     => true,
+            'supports'    => array( 'title', 'editor', 'author' ),
+            'menu_icon'   => 'dashicons-database',
+        ) );
+
         // Taxonomies
         register_taxonomy( 'orbis_note_category', 'orbis_note', array(
             'label'        => 'Note Categories',

@@ -75,6 +75,22 @@ class Orbis_Public {
         add_action( 'wp_ajax_orbis_save_site_settings', array( $this, 'handle_save_site_settings' ) );
         add_action( 'wp_ajax_orbis_save_translations', array( $this, 'handle_save_translations' ) );
 
+        // Form Submission AJAX
+        add_action( 'wp_ajax_nopriv_orbis_submit_form', array( $this, 'handle_submit_form' ) );
+        add_action( 'wp_ajax_orbis_submit_form', array( $this, 'handle_submit_form' ) );
+
+        // BMI AJAX
+        add_action( 'wp_ajax_orbis_save_bmi', array( $this, 'handle_save_bmi' ) );
+
+        // Password Manager AJAX
+        add_action( 'wp_ajax_orbis_get_passwords', array( $this, 'handle_get_passwords' ) );
+        add_action( 'wp_ajax_orbis_save_password', array( $this, 'handle_save_password' ) );
+        add_action( 'wp_ajax_orbis_delete_password', array( $this, 'handle_delete_password' ) );
+
+        // Finance AJAX
+        add_action( 'wp_ajax_orbis_get_finance_data', array( $this, 'handle_get_finance_data' ) );
+        add_action( 'wp_ajax_orbis_save_transaction', array( $this, 'handle_save_transaction' ) );
+
         // Notes AJAX
         add_action( 'wp_ajax_orbis_get_notes', array( $this, 'handle_get_notes' ) );
         add_action( 'wp_ajax_orbis_save_note', array( $this, 'handle_save_note' ) );
@@ -507,6 +523,144 @@ class Orbis_Public {
             wp_send_json_success( array( 'pinned' => $pinned == '1' ) );
         }
         wp_send_json_error();
+    }
+
+    /**
+     * Save BMI calculation.
+     */
+    public function handle_save_bmi() {
+        $user_id  = get_current_user_id();
+        $bmi      = sanitize_text_field( $_POST['bmi'] );
+        $category = sanitize_text_field( $_POST['category'] );
+
+        $history = get_user_meta( $user_id, 'orbis_bmi_history', true ) ?: array();
+        $history[] = array(
+            'date'     => date('Y-m-d H:i'),
+            'bmi'      => $bmi,
+            'category' => $category
+        );
+
+        update_user_meta( $user_id, 'orbis_bmi_history', array_slice($history, -20) ); // Keep last 20
+        wp_send_json_success();
+    }
+
+    /**
+     * Helper for encryption.
+     */
+    private function encrypt( $value ) {
+        $key = defined('SECURE_AUTH_KEY') ? SECURE_AUTH_KEY : 'orbis-secret-fallback';
+        $iv_length = openssl_cipher_iv_length( 'AES-256-CBC' );
+        $iv = openssl_random_pseudo_bytes( $iv_length );
+        $encrypted = openssl_encrypt( $value, 'AES-256-CBC', $key, 0, $iv );
+        return base64_encode( $iv . $encrypted );
+    }
+
+    /**
+     * Helper for decryption.
+     */
+    private function decrypt( $value ) {
+        $key = defined('SECURE_AUTH_KEY') ? SECURE_AUTH_KEY : 'orbis-secret-fallback';
+        $data = base64_decode( $value );
+        $iv_length = openssl_cipher_iv_length( 'AES-256-CBC' );
+        $iv = substr( $data, 0, $iv_length );
+        $encrypted = substr( $data, $iv_length );
+        return openssl_decrypt( $encrypted, 'AES-256-CBC', $key, 0, $iv );
+    }
+
+    /**
+     * Get Password Vault for current user.
+     */
+    public function handle_get_passwords() {
+        $user_id = get_current_user_id();
+        $vault = get_user_meta( $user_id, 'orbis_password_vault', true ) ?: array();
+
+        foreach ( $vault as &$entry ) {
+            $entry['password'] = $this->decrypt( $entry['password'] );
+        }
+
+        wp_send_json_success( array_values($vault) );
+    }
+
+    /**
+     * Save/Update password entry.
+     */
+    public function handle_save_password() {
+        $user_id = get_current_user_id();
+        $pass_id = !empty($_POST['pass_id']) ? $_POST['pass_id'] : uniqid();
+        $vault = get_user_meta( $user_id, 'orbis_password_vault', true ) ?: array();
+
+        $vault[$pass_id] = array(
+            'id'       => $pass_id,
+            'url'      => esc_url_raw( $_POST['pass_url'] ),
+            'username' => sanitize_text_field( $_POST['pass_user'] ),
+            'password' => $this->encrypt( $_POST['pass_val'] ),
+            'notes'    => sanitize_textarea_field( $_POST['pass_notes'] )
+        );
+
+        update_user_meta( $user_id, 'orbis_password_vault', $vault );
+        wp_send_json_success( array( 'message' => 'Vault updated securely!' ) );
+    }
+
+    /**
+     * Delete password entry.
+     */
+    public function handle_delete_password() {
+        $user_id = get_current_user_id();
+        $pass_id = $_POST['pass_id'];
+        $vault = get_user_meta( $user_id, 'orbis_password_vault', true ) ?: array();
+
+        if ( isset( $vault[$pass_id] ) ) {
+            unset( $vault[$pass_id] );
+            update_user_meta( $user_id, 'orbis_password_vault', $vault );
+            wp_send_json_success();
+        }
+        wp_send_json_error();
+    }
+
+    /**
+     * Get Finance Data for current user.
+     */
+    public function handle_get_finance_data() {
+        $user_id = get_current_user_id();
+        $transactions = get_user_meta( $user_id, 'orbis_finance_transactions', true ) ?: array();
+        wp_send_json_success( array_values($transactions) );
+    }
+
+    /**
+     * Save finance transaction.
+     */
+    public function handle_save_transaction() {
+        $user_id = get_current_user_id();
+        $transactions = get_user_meta( $user_id, 'orbis_finance_transactions', true ) ?: array();
+
+        $transactions[] = array(
+            'date'   => date('Y-m-d H:i'),
+            'type'   => sanitize_text_field( $_POST['trans_type'] ),
+            'amount' => floatval( $_POST['trans_amount'] ),
+            'desc'   => sanitize_text_field( $_POST['trans_desc'] )
+        );
+
+        update_user_meta( $user_id, 'orbis_finance_transactions', array_slice($transactions, -50) ); // Last 50
+        wp_send_json_success( array( 'message' => 'Transaction saved!' ) );
+    }
+
+    /**
+     * Handle Form Submission.
+     */
+    public function handle_submit_form() {
+        $form_id = intval( $_POST['form_id'] );
+        $data    = $_POST['form_data']; // Expecting array
+
+        $response_id = wp_insert_post( array(
+            'post_title'   => 'Response to Form #' . $form_id,
+            'post_content' => json_encode( $data, JSON_PRETTY_PRINT ),
+            'post_type'    => 'orbis_response',
+            'post_status'  => 'publish'
+        ) );
+
+        update_post_meta( $response_id, '_orbis_parent_form', $form_id );
+
+        wp_send_json_success( array( 'message' => 'Response submitted!' ) );
     }
 
     /**
