@@ -45,17 +45,3 @@
         </div>
     </div>
 </div>
-
-<style>
-.orbis-task-item { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px; box-shadow: var(--orbis-shadow); border: 1px solid #edf2f7; transition: 0.2s; }
-.orbis-task-item:hover { border-color: var(--orbis-primary); }
-.orbis-task-item.completed { opacity: 0.6; }
-.orbis-task-item.completed .orbis-task-title { text-decoration: line-through; }
-.orbis-task-details { flex-grow: 1; }
-.orbis-task-title { font-weight: 600; font-size: 16px; display: block; margin-bottom: 5px; }
-.orbis-task-meta { font-size: 12px; color: #718096; display: flex; gap: 15px; }
-.priority-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 700; text-transform: uppercase; }
-.priority-high { background: #fee2e2; color: #dc2626; }
-.priority-medium { background: #fef3c7; color: #d97706; }
-.priority-low { background: #e0f2fe; color: #0284c7; }
-</style>

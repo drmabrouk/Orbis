@@ -58,4 +58,3 @@
 .orbis-note-actions .dashicons:hover { color: var(--orbis-primary); }
 .orbis-note-card.pinned { border-left: 5px solid var(--orbis-warning); }
 .orbis-skeleton-card { height: 200px; border-radius: 14px; background: #eee; opacity: 0.6; }
-</style>

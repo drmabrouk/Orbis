@@ -1,0 +1,28 @@
+/*
+ * BMI Calculator Application - Premium Styling
+ */
+
+.orbis-bmi-container {
+    max-width: 500px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 40px;
+    border-radius: var(--orbis-radius-lg);
+    box-shadow: var(--orbis-shadow-lg);
+    border: 1px solid var(--orbis-border);
+}
+
+.orbis-bmi-meter {
+    height: 12px;
+    background: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.orbis-bmi-history table {
+    background: #fff;
+    border-radius: var(--orbis-radius);
+    overflow: hidden;
+    box-shadow: var(--orbis-shadow);
+}

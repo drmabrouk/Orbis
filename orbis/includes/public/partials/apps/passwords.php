@@ -44,15 +44,3 @@
         </div>
     </div>
 </div>
-
-<style>
-.orbis-vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-.orbis-vault-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: var(--orbis-shadow); border: 1px solid #eee; }
-.vault-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
-.vault-body p { margin: 5px 0; font-size: 14px; }
-.vault-password-wrap { display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 5px 10px; border-radius: 6px; }
-.vault-password-wrap code { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; }
-.vault-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-.vault-actions .dashicons { cursor: pointer; color: #888; }
-.vault-actions .dashicons:hover { color: var(--orbis-primary); }
-</style>

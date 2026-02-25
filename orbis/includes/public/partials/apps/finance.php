@@ -56,11 +56,3 @@
         </div>
     </div>
 </div>
-
-<style>
-.finance-card { padding: 20px; border-radius: 12px; text-align: center; box-shadow: var(--orbis-shadow); }
-.finance-card h2 { margin: 10px 0 0; }
-.transaction-item { display: flex; justify-content: space-between; padding: 15px; background: #fff; border-bottom: 1px solid #eee; }
-.transaction-item.income .amount { color: #16a34a; font-weight: 700; }
-.transaction-item.expense .amount { color: #dc2626; font-weight: 700; }
-</style>

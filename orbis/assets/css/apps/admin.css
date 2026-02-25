@@ -1,0 +1,60 @@
+/*
+ * Admin Frontend Management - Premium Styling
+ */
+
+.orbis-admin-dash-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.orbis-admin-sidebar {
+    width: 280px;
+    background: #fff;
+    padding: 25px;
+    border-radius: var(--orbis-radius);
+    box-shadow: var(--orbis-shadow);
+    border: 1px solid var(--orbis-border);
+}
+
+.orbis-admin-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.orbis-admin-sidebar li {
+    margin-bottom: 8px;
+}
+
+.orbis-admin-sidebar a {
+    text-decoration: none;
+    color: var(--orbis-secondary);
+    font-weight: 600;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.orbis-admin-sidebar li.active a {
+    background: var(--orbis-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,124,186,0.2);
+}
+
+.orbis-admin-tab-section { display: none; }
+.orbis-admin-tab-section.active { display: block; }
+
+.orbis-admin-main-content {
+    flex-grow: 1;
+}
+
+.orbis-admin-main-card {
+    background: #fff;
+    padding: 40px;
+    border-radius: var(--orbis-radius);
+    box-shadow: var(--orbis-shadow);
+}

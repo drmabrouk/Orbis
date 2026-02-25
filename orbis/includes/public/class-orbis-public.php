@@ -66,7 +66,7 @@ class Orbis_Public {
         add_filter( 'logout_redirect', array( $this, 'orbis_logout_redirect' ), 10, 3 );
         add_action( 'wp_head', array( $this, 'output_custom_styles' ) );
 
-        // AJAX handlers
+        // Core Management AJAX handlers
         add_action( 'wp_ajax_nopriv_orbis_register_user', array( $this, 'handle_registration' ) );
         add_action( 'wp_ajax_orbis_update_profile', array( $this, 'handle_profile_update' ) );
         add_action( 'wp_ajax_orbis_export_data', array( $this, 'handle_export_data' ) );
@@ -74,34 +74,6 @@ class Orbis_Public {
         add_action( 'wp_ajax_orbis_delete_account', array( $this, 'handle_delete_account' ) );
         add_action( 'wp_ajax_orbis_save_site_settings', array( $this, 'handle_save_site_settings' ) );
         add_action( 'wp_ajax_orbis_save_translations', array( $this, 'handle_save_translations' ) );
-
-        // Form Submission AJAX
-        add_action( 'wp_ajax_nopriv_orbis_submit_form', array( $this, 'handle_submit_form' ) );
-        add_action( 'wp_ajax_orbis_submit_form', array( $this, 'handle_submit_form' ) );
-
-        // BMI AJAX
-        add_action( 'wp_ajax_orbis_save_bmi', array( $this, 'handle_save_bmi' ) );
-
-        // Password Manager AJAX
-        add_action( 'wp_ajax_orbis_get_passwords', array( $this, 'handle_get_passwords' ) );
-        add_action( 'wp_ajax_orbis_save_password', array( $this, 'handle_save_password' ) );
-        add_action( 'wp_ajax_orbis_delete_password', array( $this, 'handle_delete_password' ) );
-
-        // Finance AJAX
-        add_action( 'wp_ajax_orbis_get_finance_data', array( $this, 'handle_get_finance_data' ) );
-        add_action( 'wp_ajax_orbis_save_transaction', array( $this, 'handle_save_transaction' ) );
-
-        // Notes AJAX
-        add_action( 'wp_ajax_orbis_get_notes', array( $this, 'handle_get_notes' ) );
-        add_action( 'wp_ajax_orbis_save_note', array( $this, 'handle_save_note' ) );
-        add_action( 'wp_ajax_orbis_delete_note', array( $this, 'handle_delete_note' ) );
-        add_action( 'wp_ajax_orbis_toggle_pin_note', array( $this, 'handle_toggle_pin_note' ) );
-
-        // Tasks AJAX
-        add_action( 'wp_ajax_orbis_get_tasks', array( $this, 'handle_get_tasks' ) );
-        add_action( 'wp_ajax_orbis_save_task', array( $this, 'handle_save_task' ) );
-        add_action( 'wp_ajax_orbis_toggle_task', array( $this, 'handle_toggle_task' ) );
-        add_action( 'wp_ajax_orbis_delete_task', array( $this, 'handle_delete_task' ) );
 
 	}
 
@@ -114,6 +86,7 @@ class Orbis_Public {
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/orbis-public.css', array(), $this->version, 'all' );
         wp_enqueue_style( $this->plugin_name . '-main', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/css/orbis-main.css', array(), $this->version, 'all' );
         wp_enqueue_style( $this->plugin_name . '-auth', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/css/orbis-auth.css', array(), $this->version, 'all' );
+        wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', array(), '6.4.0' );
 	}
 
 	/**
@@ -131,11 +104,10 @@ class Orbis_Public {
         $shared_params = array(
             'ajax_url'      => admin_url( 'admin-ajax.php' ),
             'dashboard_url' => site_url( 'orbis-dashboard' ),
-            'home_url'      => home_url()
+            'home_url'      => home_url(),
+            'nonce'         => wp_create_nonce( 'orbis_app_security' )
         );
         wp_localize_script( $this->plugin_name, 'orbis_params', $shared_params );
-        // Legacy support if scripts expect the old name
-        wp_localize_script( $this->plugin_name, 'orbis_auth_params', $shared_params );
 	}
 
     /**
@@ -230,16 +202,13 @@ class Orbis_Public {
             wp_send_json_error( array( 'message' => 'This email is already registered.' ) );
         }
 
-        // Use email as username
         $username = $email;
-
         $user_id = wp_create_user( $username, $password, $email );
 
         if ( is_wp_error( $user_id ) ) {
             wp_send_json_error( array( 'message' => $user_id->get_error_message() ) );
         }
 
-        // Update meta
         wp_update_user( array(
             'ID'         => $user_id,
             'first_name' => $first,
@@ -247,7 +216,6 @@ class Orbis_Public {
         ) );
         update_user_meta( $user_id, 'orbis_pref_lang', $lang );
 
-        // Log the user in
         wp_set_current_user( $user_id );
         wp_set_auth_cookie( $user_id );
 
@@ -278,7 +246,6 @@ class Orbis_Public {
         check_admin_referer( 'orbis_profile_update', 'orbis_profile_nonce' );
 
         $user_id = get_current_user_id();
-        $errors = array();
 
         $first_name = sanitize_text_field( $_POST['first_name'] );
         $last_name  = sanitize_text_field( $_POST['last_name'] );
@@ -292,7 +259,6 @@ class Orbis_Public {
         $notif_inapp = isset( $_POST['notif_inapp'] ) ? '1' : '0';
         $password   = $_POST['new_password'];
 
-        // Update core user data
         $user_data = array(
             'ID'           => $user_id,
             'first_name'   => $first_name,
@@ -310,7 +276,6 @@ class Orbis_Public {
         if ( is_wp_error( $update_id ) ) {
             echo '<div class="notice notice-error"><p>' . $update_id->get_error_message() . '</p></div>';
         } else {
-            // Update meta
             update_user_meta( $user_id, 'orbis_phone', $phone );
             update_user_meta( $user_id, 'orbis_country', $country );
             update_user_meta( $user_id, 'orbis_social_fb', $social_fb );
@@ -318,12 +283,10 @@ class Orbis_Public {
             update_user_meta( $user_id, 'orbis_notif_email', $notif_email );
             update_user_meta( $user_id, 'orbis_notif_inapp', $notif_inapp );
 
-            // Handle Profile Picture
             if ( ! empty( $_FILES['orbis_profile_pic']['name'] ) ) {
                 require_once( ABSPATH . 'wp-admin/includes/file.php' );
                 $override = array( 'test_form' => false );
                 $file = wp_handle_upload( $_FILES['orbis_profile_pic'], $override );
-
                 if ( isset( $file['url'] ) ) {
                     update_user_meta( $user_id, 'orbis_profile_pic', $file['url'] );
                 }
@@ -346,7 +309,7 @@ class Orbis_Public {
             'content' => array()
         );
 
-        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form' );
+        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form', 'orbis_calc_history', 'orbis_finance', 'orbis_password' );
         foreach ( $post_types as $pt ) {
             $posts = get_posts( array(
                 'post_type' => $pt,
@@ -373,8 +336,7 @@ class Orbis_Public {
         check_ajax_referer( 'orbis_account_action', 'orbis_account_nonce' );
         $user_id = get_current_user_id();
 
-        // Delete all Orbis posts
-        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form' );
+        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form', 'orbis_calc_history', 'orbis_finance', 'orbis_password' );
         foreach ( $post_types as $pt ) {
             $posts = get_posts( array(
                 'post_type' => $pt,
@@ -387,7 +349,6 @@ class Orbis_Public {
             }
         }
 
-        // Reset specific user meta
         $metas = array( 'orbis_phone', 'orbis_country', 'orbis_timezone', 'orbis_social_fb', 'orbis_social_tw', 'orbis_notif_email', 'orbis_notif_inapp', 'orbis_profile_pic' );
         foreach ( $metas as $m ) {
             delete_user_meta( $user_id, $m );
@@ -446,315 +407,13 @@ class Orbis_Public {
     }
 
     /**
-     * Get Notes for current user.
-     */
-    public function handle_get_notes() {
-        $user_id = get_current_user_id();
-        $notes = get_posts( array(
-            'post_type' => 'orbis_note',
-            'author'    => $user_id,
-            'posts_per_page' => -1,
-            'orderby'   => 'meta_value_num date',
-            'meta_key'  => '_orbis_note_pinned',
-            'order'     => 'DESC'
-        ) );
-
-        $data = array();
-        foreach ( $notes as $n ) {
-            $data[] = array(
-                'id'       => $n->ID,
-                'title'    => $n->post_title,
-                'content'  => $n->post_content,
-                'pinned'   => get_post_meta( $n->ID, '_orbis_note_pinned', true ) == '1',
-                'category' => wp_get_post_terms( $n->ID, 'orbis_note_category', array( 'fields' => 'names' ) )
-            );
-        }
-
-        wp_send_json_success( $data );
-    }
-
-    /**
-     * Save or update a note.
-     */
-    public function handle_save_note() {
-        $user_id = get_current_user_id();
-        $note_id = isset( $_POST['note_id'] ) ? intval( $_POST['note_id'] ) : 0;
-        $title   = sanitize_text_field( $_POST['note_title'] );
-        $content = wp_kses_post( $_POST['note_content'] );
-
-        $args = array(
-            'post_title'   => $title,
-            'post_content' => $content,
-            'post_type'    => 'orbis_note',
-            'post_status'  => 'publish',
-            'post_author'  => $user_id
-        );
-
-        if ( $note_id > 0 ) {
-            $args['ID'] = $note_id;
-            wp_update_post( $args );
-        } else {
-            $note_id = wp_insert_post( $args );
-        }
-
-        wp_send_json_success( array( 'message' => 'Note saved!', 'id' => $note_id ) );
-    }
-
-    /**
-     * Delete a note.
-     */
-    public function handle_delete_note() {
-        $note_id = intval( $_POST['note_id'] );
-        if ( get_post_field( 'post_author', $note_id ) == get_current_user_id() ) {
-            wp_delete_post( $note_id, true );
-            wp_send_json_success();
-        }
-        wp_send_json_error();
-    }
-
-    /**
-     * Toggle pin status.
-     */
-    public function handle_toggle_pin_note() {
-        $note_id = intval( $_POST['note_id'] );
-        if ( get_post_field( 'post_author', $note_id ) == get_current_user_id() ) {
-            $pinned = get_post_meta( $note_id, '_orbis_note_pinned', true ) == '1' ? '0' : '1';
-            update_post_meta( $note_id, '_orbis_note_pinned', $pinned );
-            wp_send_json_success( array( 'pinned' => $pinned == '1' ) );
-        }
-        wp_send_json_error();
-    }
-
-    /**
-     * Save BMI calculation.
-     */
-    public function handle_save_bmi() {
-        $user_id  = get_current_user_id();
-        $bmi      = sanitize_text_field( $_POST['bmi'] );
-        $category = sanitize_text_field( $_POST['category'] );
-
-        $history = get_user_meta( $user_id, 'orbis_bmi_history', true ) ?: array();
-        $history[] = array(
-            'date'     => date('Y-m-d H:i'),
-            'bmi'      => $bmi,
-            'category' => $category
-        );
-
-        update_user_meta( $user_id, 'orbis_bmi_history', array_slice($history, -20) ); // Keep last 20
-        wp_send_json_success();
-    }
-
-    /**
-     * Helper for encryption.
-     */
-    private function encrypt( $value ) {
-        $key = defined('SECURE_AUTH_KEY') ? SECURE_AUTH_KEY : 'orbis-secret-fallback';
-        $iv_length = openssl_cipher_iv_length( 'AES-256-CBC' );
-        $iv = openssl_random_pseudo_bytes( $iv_length );
-        $encrypted = openssl_encrypt( $value, 'AES-256-CBC', $key, 0, $iv );
-        return base64_encode( $iv . $encrypted );
-    }
-
-    /**
-     * Helper for decryption.
-     */
-    private function decrypt( $value ) {
-        $key = defined('SECURE_AUTH_KEY') ? SECURE_AUTH_KEY : 'orbis-secret-fallback';
-        $data = base64_decode( $value );
-        $iv_length = openssl_cipher_iv_length( 'AES-256-CBC' );
-        $iv = substr( $data, 0, $iv_length );
-        $encrypted = substr( $data, $iv_length );
-        return openssl_decrypt( $encrypted, 'AES-256-CBC', $key, 0, $iv );
-    }
-
-    /**
-     * Get Password Vault for current user.
-     */
-    public function handle_get_passwords() {
-        $user_id = get_current_user_id();
-        $vault = get_user_meta( $user_id, 'orbis_password_vault', true ) ?: array();
-
-        foreach ( $vault as &$entry ) {
-            $entry['password'] = $this->decrypt( $entry['password'] );
-        }
-
-        wp_send_json_success( array_values($vault) );
-    }
-
-    /**
-     * Save/Update password entry.
-     */
-    public function handle_save_password() {
-        $user_id = get_current_user_id();
-        $pass_id = !empty($_POST['pass_id']) ? $_POST['pass_id'] : uniqid();
-        $vault = get_user_meta( $user_id, 'orbis_password_vault', true ) ?: array();
-
-        $vault[$pass_id] = array(
-            'id'       => $pass_id,
-            'url'      => esc_url_raw( $_POST['pass_url'] ),
-            'username' => sanitize_text_field( $_POST['pass_user'] ),
-            'password' => $this->encrypt( $_POST['pass_val'] ),
-            'notes'    => sanitize_textarea_field( $_POST['pass_notes'] )
-        );
-
-        update_user_meta( $user_id, 'orbis_password_vault', $vault );
-        wp_send_json_success( array( 'message' => 'Vault updated securely!' ) );
-    }
-
-    /**
-     * Delete password entry.
-     */
-    public function handle_delete_password() {
-        $user_id = get_current_user_id();
-        $pass_id = $_POST['pass_id'];
-        $vault = get_user_meta( $user_id, 'orbis_password_vault', true ) ?: array();
-
-        if ( isset( $vault[$pass_id] ) ) {
-            unset( $vault[$pass_id] );
-            update_user_meta( $user_id, 'orbis_password_vault', $vault );
-            wp_send_json_success();
-        }
-        wp_send_json_error();
-    }
-
-    /**
-     * Get Finance Data for current user.
-     */
-    public function handle_get_finance_data() {
-        $user_id = get_current_user_id();
-        $transactions = get_user_meta( $user_id, 'orbis_finance_transactions', true ) ?: array();
-        wp_send_json_success( array_values($transactions) );
-    }
-
-    /**
-     * Save finance transaction.
-     */
-    public function handle_save_transaction() {
-        $user_id = get_current_user_id();
-        $transactions = get_user_meta( $user_id, 'orbis_finance_transactions', true ) ?: array();
-
-        $transactions[] = array(
-            'date'   => date('Y-m-d H:i'),
-            'type'   => sanitize_text_field( $_POST['trans_type'] ),
-            'amount' => floatval( $_POST['trans_amount'] ),
-            'desc'   => sanitize_text_field( $_POST['trans_desc'] )
-        );
-
-        update_user_meta( $user_id, 'orbis_finance_transactions', array_slice($transactions, -50) ); // Last 50
-        wp_send_json_success( array( 'message' => 'Transaction saved!' ) );
-    }
-
-    /**
-     * Handle Form Submission.
-     */
-    public function handle_submit_form() {
-        $form_id = intval( $_POST['form_id'] );
-        $data    = $_POST['form_data']; // Expecting array
-
-        $response_id = wp_insert_post( array(
-            'post_title'   => 'Response to Form #' . $form_id,
-            'post_content' => json_encode( $data, JSON_PRETTY_PRINT ),
-            'post_type'    => 'orbis_response',
-            'post_status'  => 'publish'
-        ) );
-
-        update_post_meta( $response_id, '_orbis_parent_form', $form_id );
-
-        wp_send_json_success( array( 'message' => 'Response submitted!' ) );
-    }
-
-    /**
-     * Get Tasks for current user.
-     */
-    public function handle_get_tasks() {
-        $user_id = get_current_user_id();
-        $tasks = get_posts( array(
-            'post_type' => 'orbis_task',
-            'author'    => $user_id,
-            'posts_per_page' => -1,
-            'orderby'   => 'date',
-            'order'     => 'DESC'
-        ) );
-
-        $data = array();
-        foreach ( $tasks as $t ) {
-            $data[] = array(
-                'id'       => $t->ID,
-                'title'    => $t->post_title,
-                'deadline' => get_post_meta( $t->ID, '_orbis_task_deadline', true ),
-                'priority' => get_post_meta( $t->ID, '_orbis_task_priority', true ),
-                'status'   => get_post_meta( $t->ID, '_orbis_task_status', true ) ?: 'pending'
-            );
-        }
-
-        wp_send_json_success( $data );
-    }
-
-    /**
-     * Save or update a task.
-     */
-    public function handle_save_task() {
-        $user_id = get_current_user_id();
-        $task_id = isset( $_POST['task_id'] ) ? intval( $_POST['task_id'] ) : 0;
-        $title   = sanitize_text_field( $_POST['task_title'] );
-        $deadline = sanitize_text_field( $_POST['task_deadline'] );
-        $priority = sanitize_text_field( $_POST['task_priority'] );
-
-        $args = array(
-            'post_title'   => $title,
-            'post_type'    => 'orbis_task',
-            'post_status'  => 'publish',
-            'post_author'  => $user_id
-        );
-
-        if ( $task_id > 0 ) {
-            $args['ID'] = $task_id;
-            wp_update_post( $args );
-        } else {
-            $task_id = wp_insert_post( $args );
-            update_post_meta( $task_id, '_orbis_task_status', 'pending' );
-        }
-
-        update_post_meta( $task_id, '_orbis_task_deadline', $deadline );
-        update_post_meta( $task_id, '_orbis_task_priority', $priority );
-
-        wp_send_json_success( array( 'message' => 'Task saved!', 'id' => $task_id ) );
-    }
-
-    /**
-     * Toggle task status.
-     */
-    public function handle_toggle_task() {
-        $task_id = intval( $_POST['task_id'] );
-        if ( get_post_field( 'post_author', $task_id ) == get_current_user_id() ) {
-            $status = get_post_meta( $task_id, '_orbis_task_status', true ) === 'completed' ? 'pending' : 'completed';
-            update_post_meta( $task_id, '_orbis_task_status', $status );
-            wp_send_json_success( array( 'status' => $status ) );
-        }
-        wp_send_json_error();
-    }
-
-    /**
-     * Delete a task.
-     */
-    public function handle_delete_task() {
-        $task_id = intval( $_POST['task_id'] );
-        if ( get_post_field( 'post_author', $task_id ) == get_current_user_id() ) {
-            wp_delete_post( $task_id, true );
-            wp_send_json_success();
-        }
-        wp_send_json_error();
-    }
-
-    /**
      * Handle Account Deletion.
      */
     public function handle_delete_account() {
         check_ajax_referer( 'orbis_account_action', 'orbis_account_nonce' );
         $user_id = get_current_user_id();
 
-        // 1. Delete all Orbis posts
-        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form' );
+        $post_types = array( 'orbis_note', 'orbis_task', 'orbis_project', 'orbis_form', 'orbis_calc_history', 'orbis_finance', 'orbis_password' );
         foreach ( $post_types as $pt ) {
             $posts = get_posts( array(
                 'post_type' => $pt,
@@ -767,7 +426,6 @@ class Orbis_Public {
             }
         }
 
-        // 2. Delete the user
         require_once( ABSPATH . 'wp-admin/includes/user.php' );
         wp_delete_user( $user_id );
 

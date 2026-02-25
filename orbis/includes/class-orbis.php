@@ -78,7 +78,6 @@ class Orbis {
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
-        $this->define_custom_post_types();
         $this->define_module_hooks();
 
 	}
@@ -125,15 +124,28 @@ class Orbis {
 		require_once plugin_dir_path( __FILE__ ) . 'public/class-orbis-public.php';
 
         /**
-         * Load Modules
+         * Load Core Services
          */
-        require_once plugin_dir_path( __FILE__ ) . 'modules/notes/class-orbis-notes.php';
-        require_once plugin_dir_path( __FILE__ ) . 'modules/tasks/class-orbis-tasks.php';
-        require_once plugin_dir_path( __FILE__ ) . 'modules/projects/class-orbis-projects.php';
-        require_once plugin_dir_path( __FILE__ ) . 'modules/calendar/class-orbis-calendar.php';
-        require_once plugin_dir_path( __FILE__ ) . 'modules/tools/class-orbis-tools.php';
-        require_once plugin_dir_path( __FILE__ ) . 'modules/forms/class-orbis-forms.php';
-        require_once plugin_dir_path( __FILE__ ) . 'modules/translator/class-orbis-translator.php';
+        require_once plugin_dir_path( __FILE__ ) . 'class-orbis-translator.php';
+
+        /**
+         * Load Application Classes
+         */
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-notes.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-tasks.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-projects.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-calendar.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-documents.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-finance.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-bmi.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-passwords.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-images.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-forms.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-notifications.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-utilities.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-clocks.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-settings.php';
+        require_once plugin_dir_path( __FILE__ ) . 'apps/class-orbis-app-admin.php';
 
 		$this->loader = new Orbis_Loader();
 
@@ -193,90 +205,29 @@ class Orbis {
      * Register all of the hooks related to the modules.
      */
     private function define_module_hooks() {
-        $plugin_notes = new Orbis_Notes();
-        $this->loader->add_action( 'init', $plugin_notes, 'init' );
-
-        $plugin_tasks = new Orbis_Tasks();
-        $this->loader->add_action( 'init', $plugin_tasks, 'init' );
-
-        $plugin_projects = new Orbis_Projects();
-        $this->loader->add_action( 'init', $plugin_projects, 'init' );
-
-        $plugin_calendar = new Orbis_Calendar();
-        $this->loader->add_action( 'init', $plugin_calendar, 'init' );
-
-        $plugin_tools = new Orbis_Tools();
-        $this->loader->add_action( 'init', $plugin_tools, 'init' );
-
-        $plugin_forms = new Orbis_Forms();
-        $this->loader->add_action( 'init', $plugin_forms, 'init' );
-
         $plugin_translator = new Orbis_Translator();
         $this->loader->add_action( 'init', $plugin_translator, 'init' );
         // Make translator accessible globally
         $GLOBALS['orbis_translator'] = $plugin_translator;
+
+        // Modular Applications
+        new Orbis_App_Notes( 'notes', 'Notes', $this->version );
+        new Orbis_App_Tasks( 'tasks', 'Tasks', $this->version );
+        new Orbis_App_Projects( 'projects', 'Projects', $this->version );
+        new Orbis_App_Calendar( 'calendar', 'Calendar', $this->version );
+        new Orbis_App_Documents( 'documents', 'Documents', $this->version );
+        new Orbis_App_Finance( 'finance', 'Finance', $this->version );
+        new Orbis_App_BMI( 'bmi', 'BMI', $this->version );
+        new Orbis_App_Passwords( 'passwords', 'Passwords', $this->version );
+        new Orbis_App_Images( 'images', 'Images', $this->version );
+        new Orbis_App_Forms( 'forms', 'Forms', $this->version );
+        new Orbis_App_Notifications( 'notifications', 'Notifications', $this->version );
+        new Orbis_App_Utilities( 'utilities', 'Utilities', $this->version );
+        new Orbis_App_Clocks( 'clocks', 'Clocks', $this->version );
+        new Orbis_App_Settings( 'settings', 'Settings', $this->version );
+        new Orbis_App_Admin( 'admin', 'Admin', $this->version );
     }
 
-    /**
-     * Define Custom Post Types and Taxonomies.
-     */
-    private function define_custom_post_types() {
-        $this->loader->add_action( 'init', $this, 'register_cpts' );
-    }
-
-    public function register_cpts() {
-        // Notes CPT
-        register_post_type( 'orbis_note', array(
-            'labels'      => array( 'name' => 'Notes', 'singular_name' => 'Note' ),
-            'public'      => true,
-            'has_archive' => true,
-            'supports'    => array( 'title', 'editor', 'author' ),
-            'menu_icon'   => 'dashicons-welcome-write-blog',
-            'show_in_rest' => true,
-        ) );
-
-        // Tasks CPT
-        register_post_type( 'orbis_task', array(
-            'labels'      => array( 'name' => 'Tasks', 'singular_name' => 'Task' ),
-            'public'      => true,
-            'has_archive' => true,
-            'supports'    => array( 'title', 'editor', 'author', 'custom-fields' ),
-            'menu_icon'   => 'dashicons-list-view',
-            'show_in_rest' => true,
-        ) );
-
-        // Projects CPT
-        register_post_type( 'orbis_project', array(
-            'labels'      => array( 'name' => 'Projects', 'singular_name' => 'Project' ),
-            'public'      => true,
-            'has_archive' => true,
-            'supports'    => array( 'title', 'editor', 'author' ),
-            'menu_icon'   => 'dashicons-portfolio',
-            'show_in_rest' => true,
-        ) );
-
-        // Form Responses CPT
-        register_post_type( 'orbis_response', array(
-            'labels'      => array( 'name' => 'Form Responses', 'singular_name' => 'Response' ),
-            'public'      => false,
-            'show_ui'     => true,
-            'supports'    => array( 'title', 'editor', 'author' ),
-            'menu_icon'   => 'dashicons-database',
-        ) );
-
-        // Taxonomies
-        register_taxonomy( 'orbis_note_category', 'orbis_note', array(
-            'label'        => 'Note Categories',
-            'hierarchical' => true,
-            'show_in_rest' => true,
-        ) );
-
-        register_taxonomy( 'orbis_project_status', 'orbis_project', array(
-            'label'        => 'Project Status',
-            'hierarchical' => true,
-            'show_in_rest' => true,
-        ) );
-    }
 
 	/**
 	 * Run the loader to execute all of the hooks with WordPress.
