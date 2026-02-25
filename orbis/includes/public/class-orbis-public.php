@@ -53,8 +53,15 @@ class Orbis_Public {
 		$this->version = $version;
 
         add_shortcode( 'orbis_dashboard', array( $this, 'display_dashboard' ) );
-        add_shortcode( 'orbis_login', array( $this, 'display_login' ) );
-        add_shortcode( 'orbis_register', array( $this, 'display_register' ) );
+        add_shortcode( 'orbis_auth', array( $this, 'display_auth_interface' ) );
+
+        // Map old shortcodes to the unified interface
+        add_shortcode( 'orbis_login', array( $this, 'display_auth_interface' ) );
+        add_shortcode( 'orbis_register', array( $this, 'display_auth_interface' ) );
+
+        // Redirects
+        add_filter( 'login_redirect', array( $this, 'orbis_login_redirect' ), 10, 3 );
+        add_filter( 'logout_redirect', array( $this, 'orbis_logout_redirect' ), 10, 3 );
 
 	}
 
@@ -66,6 +73,7 @@ class Orbis_Public {
 	public function enqueue_styles() {
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/orbis-public.css', array(), $this->version, 'all' );
         wp_enqueue_style( $this->plugin_name . '-main', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/css/orbis-main.css', array(), $this->version, 'all' );
+        wp_enqueue_style( $this->plugin_name . '-auth', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/css/orbis-auth.css', array(), $this->version, 'all' );
 	}
 
 	/**
@@ -75,6 +83,7 @@ class Orbis_Public {
 	 */
 	public function enqueue_scripts() {
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/orbis-public.js', array( 'jquery' ), $this->version, false );
+        wp_enqueue_script( $this->plugin_name . '-auth', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/js/orbis-auth.js', array( 'jquery' ), $this->version, true );
 	}
 
     /**
@@ -90,27 +99,32 @@ class Orbis_Public {
     }
 
     /**
-     * Render the login form.
+     * Render the unified authentication interface.
      */
-    public function display_login() {
+    public function display_auth_interface() {
         if ( is_user_logged_in() ) {
             return '<p>You are already logged in. <a href="' . site_url('orbis-dashboard') . '">Go to Dashboard</a></p>';
         }
-        return wp_login_form( array( 'echo' => false, 'redirect' => site_url( 'orbis-dashboard' ) ) );
+        ob_start();
+        include_once plugin_dir_path( __FILE__ ) . 'partials/orbis-auth-display.php';
+        return ob_get_clean();
     }
 
     /**
-     * Render the register form.
+     * Redirect users to the Orbis Dashboard after login.
      */
-    public function display_register() {
-        if ( is_user_logged_in() ) {
-            return '<p>You are already registered and logged in.</p>';
+    public function orbis_login_redirect( $redirect_to, $request, $user ) {
+        if ( ! is_wp_error( $user ) && isset( $user->roles ) && is_array( $user->roles ) ) {
+            return site_url( '/orbis-dashboard' );
         }
-        if ( ! get_option( 'users_can_register' ) ) {
-            return '<p>User registration is currently disabled.</p>';
-        }
-        // Basic registration link or form
-        return '<p>Please <a href="' . wp_registration_url() . '">Register here</a> to start using Orbis.</p>';
+        return $redirect_to;
+    }
+
+    /**
+     * Redirect users to the home page after logout.
+     */
+    public function orbis_logout_redirect( $redirect_to, $requested_redirect_to, $user ) {
+        return home_url();
     }
 
 }
