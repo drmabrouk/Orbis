@@ -53,6 +53,7 @@ class Orbis_Public {
 		$this->version = $version;
 
         add_shortcode( 'orbis_dashboard', array( $this, 'display_dashboard' ) );
+        add_shortcode( 'orbis_admin_dashboard', array( $this, 'display_admin_dashboard' ) );
         add_shortcode( 'orbis_auth', array( $this, 'display_auth_interface' ) );
         add_shortcode( 'orbis_profile', array( $this, 'display_profile_editor' ) );
 
@@ -63,6 +64,7 @@ class Orbis_Public {
         // Redirects
         add_filter( 'login_redirect', array( $this, 'orbis_login_redirect' ), 10, 3 );
         add_filter( 'logout_redirect', array( $this, 'orbis_logout_redirect' ), 10, 3 );
+        add_action( 'wp_head', array( $this, 'output_custom_styles' ) );
 
         // AJAX handlers
         add_action( 'wp_ajax_nopriv_orbis_register_user', array( $this, 'handle_registration' ) );
@@ -70,6 +72,7 @@ class Orbis_Public {
         add_action( 'wp_ajax_orbis_export_data', array( $this, 'handle_export_data' ) );
         add_action( 'wp_ajax_orbis_reset_account', array( $this, 'handle_reset_account' ) );
         add_action( 'wp_ajax_orbis_delete_account', array( $this, 'handle_delete_account' ) );
+        add_action( 'wp_ajax_orbis_save_site_settings', array( $this, 'handle_save_site_settings' ) );
 
 	}
 
@@ -93,13 +96,26 @@ class Orbis_Public {
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/orbis-public.js', array( 'jquery' ), $this->version, false );
         wp_enqueue_script( $this->plugin_name . '-auth', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/js/orbis-auth.js', array( 'jquery' ), $this->version, true );
         wp_enqueue_script( $this->plugin_name . '-account', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/js/orbis-account.js', array( 'jquery' ), $this->version, true );
+        wp_enqueue_script( $this->plugin_name . '-mgmt', plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) ) . 'assets/js/orbis-dashboard-mgmt.js', array( 'jquery' ), $this->version, true );
 
-        wp_localize_script( $this->plugin_name . '-auth', 'orbis_auth_params', array(
+        // Shared parameters for all Orbis frontend scripts
+        $shared_params = array(
             'ajax_url'      => admin_url( 'admin-ajax.php' ),
             'dashboard_url' => site_url( 'orbis-dashboard' ),
             'home_url'      => home_url()
-        ) );
+        );
+        wp_localize_script( $this->plugin_name, 'orbis_params', $shared_params );
+        // Legacy support if scripts expect the old name
+        wp_localize_script( $this->plugin_name, 'orbis_auth_params', $shared_params );
 	}
+
+    /**
+     * Output dynamic CSS variables.
+     */
+    public function output_custom_styles() {
+        $primary_color = get_option( 'orbis_primary_color', '#007cba' );
+        echo '<style>:root { --orbis-primary: ' . esc_attr( $primary_color ) . '; }</style>';
+    }
 
     /**
      * Render the dashboard.
@@ -129,8 +145,12 @@ class Orbis_Public {
      * Redirect users to the Orbis Dashboard after login.
      */
     public function orbis_login_redirect( $redirect_to, $request, $user ) {
-        if ( ! is_wp_error( $user ) && isset( $user->roles ) && is_array( $user->roles ) ) {
-            return site_url( '/orbis-dashboard' );
+        if ( ! is_wp_error( $user ) ) {
+            if ( user_can( $user, 'manage_options' ) ) {
+                return site_url( '/orbis-admin-dashboard' );
+            } else if ( isset( $user->roles ) && is_array( $user->roles ) ) {
+                return site_url( '/orbis-dashboard' );
+            }
         }
         return $redirect_to;
     }
@@ -140,6 +160,19 @@ class Orbis_Public {
      */
     public function orbis_logout_redirect( $redirect_to, $requested_redirect_to, $user ) {
         return home_url();
+    }
+
+    /**
+     * Render the admin dashboard.
+     */
+    public function display_admin_dashboard() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return '<p>Access denied. This page is for administrators only.</p>';
+        }
+        wp_enqueue_media();
+        ob_start();
+        include_once plugin_dir_path( __FILE__ ) . 'partials/orbis-admin-frontend-display.php';
+        return ob_get_clean();
     }
 
     /**
@@ -332,6 +365,31 @@ class Orbis_Public {
         }
 
         wp_send_json_success( array( 'message' => 'Account reset successfully.' ) );
+    }
+
+    /**
+     * Handle Site Settings saving from frontend admin.
+     */
+    public function handle_save_site_settings() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
+        }
+        check_ajax_referer( 'orbis_save_settings', 'orbis_settings_nonce' );
+
+        $options = array(
+            'orbis_site_title'       => sanitize_text_field( $_POST['orbis_site_title'] ),
+            'orbis_site_description' => sanitize_textarea_field( $_POST['orbis_site_description'] ),
+            'orbis_contact_email'    => sanitize_email( $_POST['orbis_contact_email'] ),
+            'orbis_site_logo'        => esc_url_raw( $_POST['orbis_site_logo'] ),
+            'orbis_primary_color'    => sanitize_hex_color( $_POST['orbis_primary_color'] ),
+            'orbis_footer_text'      => sanitize_textarea_field( $_POST['orbis_footer_text'] )
+        );
+
+        foreach ( $options as $key => $value ) {
+            update_option( $key, $value );
+        }
+
+        wp_send_json_success( array( 'message' => 'Site settings updated successfully.' ) );
     }
 
     /**
