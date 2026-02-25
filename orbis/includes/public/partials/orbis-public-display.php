@@ -7,7 +7,7 @@ $logo_url = get_option( 'orbis_site_logo', '' );
 $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis System' );
 ?>
 
-<div class="orbis-full-dashboard">
+<div class="orbis-full-dashboard" <?php if ($GLOBALS['orbis_translator']->get_current_language() === 'ar') echo 'dir="rtl"'; ?>>
     <!-- Full Site Header -->
     <header class="orbis-master-header">
         <div class="orbis-header-inner">
@@ -18,8 +18,8 @@ $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis 
                 <span class="orbis-site-title"><?php echo esc_html($site_title); ?></span>
             </div>
             <div class="orbis-user-meta">
-                <span>Hello, <?php echo wp_get_current_user()->display_name; ?></span>
-                <a href="<?php echo wp_logout_url( home_url() ); ?>" class="button">Logout</a>
+                <span><?php echo sprintf( orbis_t('hello_user', 'Hello, %s', 'مرحباً، %s', 'Dashboard'), wp_get_current_user()->display_name ); ?></span>
+                <a href="<?php echo wp_logout_url( home_url() ); ?>" class="button"><?php echo orbis_t('logout', 'Logout', 'تسجيل الخروج', 'Auth'); ?></a>
             </div>
         </div>
     </header>
@@ -29,13 +29,13 @@ $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis 
         <aside class="orbis-master-sidebar">
             <nav class="orbis-sidebar-nav">
                 <ul>
-                    <li><a href="#overview">Dashboard Overview</a></li>
-                    <li><a href="#notes">My Notes</a></li>
-                    <li><a href="#tasks">Task Manager</a></li>
-                    <li><a href="#projects">Project Tracking</a></li>
-                    <li><a href="#calendar">Calendar</a></li>
-                    <li><a href="#tools">Productivity Tools</a></li>
-                    <li><a href="<?php echo site_url('orbis-profile'); ?>">Account Settings</a></li>
+                    <li><a href="#overview"><?php echo orbis_t('dash_overview', 'Dashboard Overview', 'نظرة عامة على لوحة التحكم', 'Navigation'); ?></a></li>
+                    <li><a href="#notes"><?php echo orbis_t('my_notes', 'My Notes', 'ملاحظاتي', 'Navigation'); ?></a></li>
+                    <li><a href="#tasks"><?php echo orbis_t('task_manager', 'Task Manager', 'مدير المهام', 'Navigation'); ?></a></li>
+                    <li><a href="#projects"><?php echo orbis_t('project_tracking', 'Project Tracking', 'تتبع المشاريع', 'Navigation'); ?></a></li>
+                    <li><a href="#calendar"><?php echo orbis_t('calendar', 'Calendar', 'التقويم', 'Navigation'); ?></a></li>
+                    <li><a href="#tools"><?php echo orbis_t('productivity_tools', 'Productivity Tools', 'أدوات الإنتاجية', 'Navigation'); ?></a></li>
+                    <li><a href="<?php echo site_url('orbis-profile'); ?>"><?php echo orbis_t('account_settings', 'Account Settings', 'إعدادات الحساب', 'Navigation'); ?></a></li>
                 </ul>
             </nav>
         </aside>
@@ -43,13 +43,13 @@ $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis 
         <!-- Main Workspace -->
         <main class="orbis-master-content">
             <section id="overview" class="orbis-dashboard-section">
-                <h2>Welcome to your Orbis Workspace</h2>
-                <p>Manage your personal and business productivity in one professional environment.</p>
+                <h2><?php echo orbis_t('welcome_workspace', 'Welcome to your Orbis Workspace', 'مرحباً بك في مساحة عمل أوربيس الخاصة بك', 'Dashboard'); ?></h2>
+                <p><?php echo orbis_t('workspace_desc', 'Manage your personal and business productivity in one professional environment.', 'قم بإدارة إنتاجيتك الشخصية والمهنية في بيئة احترافية واحدة.', 'Dashboard'); ?></p>
             </section>
 
             <div class="orbis-dashboard-grid">
                 <section id="notes" class="orbis-dashboard-section card">
-                    <h3>Recent Notes</h3>
+                    <h3><?php echo orbis_t('recent_notes', 'Recent Notes', 'الملاحظات الأخيرة', 'Modules'); ?></h3>
                     <?php
                     $notes_query = new WP_Query( array(
                         'post_type' => 'orbis_note',
@@ -64,13 +64,13 @@ $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis 
                         echo '</ul>';
                         wp_reset_postdata();
                     else :
-                        echo '<p>No notes found.</p>';
+                        echo '<p>' . orbis_t('no_notes', 'No notes found.', 'لم يتم العثور على ملاحظات.', 'Modules') . '</p>';
                     endif;
                     ?>
                 </section>
 
                 <section id="tasks" class="orbis-dashboard-section card">
-                    <h3>Active Tasks</h3>
+                    <h3><?php echo orbis_t('active_tasks', 'Active Tasks', 'المهام النشطة', 'Modules'); ?></h3>
                     <?php
                     $tasks_query = new WP_Query( array(
                         'post_type' => 'orbis_task',
@@ -85,7 +85,7 @@ $footer_text = get_option( 'orbis_footer_text', '&copy; ' . date('Y') . ' Orbis 
                         echo '</ul>';
                         wp_reset_postdata();
                     else :
-                        echo '<p>No tasks found.</p>';
+                        echo '<p>' . orbis_t('no_tasks', 'No tasks found.', 'لم يتم العثور على مهام.', 'Modules') . '</p>';
                     endif;
                     ?>
                 </section>

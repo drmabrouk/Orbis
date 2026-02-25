@@ -23,6 +23,7 @@ $logo_url = get_option( 'orbis_site_logo', '' );
                     <li class="active"><a href="#general" data-tab="general">General Settings</a></li>
                     <li><a href="#structure" data-tab="structure">Structure (Header/Footer)</a></li>
                     <li><a href="#appearance" data-tab="appearance">Appearance & Style</a></li>
+                    <li><a href="#translations" data-tab="translations">Internal Translations</a></li>
                     <li><a href="#plugin" data-tab="plugin">Plugin Features</a></li>
                 </ul>
             </nav>
@@ -93,6 +94,43 @@ $logo_url = get_option( 'orbis_site_logo', '' );
                         <option value="monospace">Clean Monospace</option>
                     </select>
                 </div>
+            </section>
+
+            <!-- Translations Tab -->
+            <section id="orbis-tab-translations" class="orbis-admin-tab-section">
+                <h3>Bilingual Translation Management</h3>
+                <p>Manage English and Arabic text for all plugin elements.</p>
+
+                <div class="orbis-translation-filters" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                    <input type="text" id="orbis-translation-search" placeholder="Search strings..." style="flex-grow:1; padding:10px; border:1px solid #ddd; border-radius:6px;">
+                </div>
+
+                <form id="orbis-translations-form">
+                    <?php wp_nonce_field( 'orbis_save_translations', 'orbis_translations_nonce' ); ?>
+                    <div class="orbis-translation-list" style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+                        <table class="wp-list-table widefat fixed striped" style="border:none;">
+                            <thead>
+                                <tr>
+                                    <th style="width:20%;">Key / Context</th>
+                                    <th>English (LTR)</th>
+                                    <th>Arabic (RTL)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orbis-translation-table-body">
+                                <?php
+                                $all_translations = $GLOBALS['orbis_translator']->get_all();
+                                foreach ( $all_translations as $key => $data ) : ?>
+                                    <tr class="orbis-translation-row" data-key="<?php echo esc_attr($key); ?>">
+                                        <td><strong><?php echo esc_html($key); ?></strong><br><small><?php echo esc_html($data['category']); ?></small></td>
+                                        <td><textarea name="translations[<?php echo esc_attr($key); ?>][en]" style="width:100%; min-height:60px;"><?php echo esc_textarea($data['en']); ?></textarea></td>
+                                        <td><textarea name="translations[<?php echo esc_attr($key); ?>][ar]" dir="rtl" style="width:100%; min-height:60px;"><?php echo esc_textarea($data['ar']); ?></textarea></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="orbis-auth-submit" style="margin-top: 20px;">Save All Translations</button>
+                </form>
             </section>
 
             <div id="orbis-admin-mgmt-msg"></div>

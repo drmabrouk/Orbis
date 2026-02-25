@@ -133,6 +133,7 @@ class Orbis {
         require_once plugin_dir_path( __FILE__ ) . 'modules/calendar/class-orbis-calendar.php';
         require_once plugin_dir_path( __FILE__ ) . 'modules/tools/class-orbis-tools.php';
         require_once plugin_dir_path( __FILE__ ) . 'modules/forms/class-orbis-forms.php';
+        require_once plugin_dir_path( __FILE__ ) . 'modules/translator/class-orbis-translator.php';
 
 		$this->loader = new Orbis_Loader();
 
@@ -209,6 +210,11 @@ class Orbis {
 
         $plugin_forms = new Orbis_Forms();
         $this->loader->add_action( 'init', $plugin_forms, 'init' );
+
+        $plugin_translator = new Orbis_Translator();
+        $this->loader->add_action( 'init', $plugin_translator, 'init' );
+        // Make translator accessible globally
+        $GLOBALS['orbis_translator'] = $plugin_translator;
     }
 
     /**

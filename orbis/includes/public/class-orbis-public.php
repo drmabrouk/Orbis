@@ -73,6 +73,7 @@ class Orbis_Public {
         add_action( 'wp_ajax_orbis_reset_account', array( $this, 'handle_reset_account' ) );
         add_action( 'wp_ajax_orbis_delete_account', array( $this, 'handle_delete_account' ) );
         add_action( 'wp_ajax_orbis_save_site_settings', array( $this, 'handle_save_site_settings' ) );
+        add_action( 'wp_ajax_orbis_save_translations', array( $this, 'handle_save_translations' ) );
 
 	}
 
@@ -365,6 +366,30 @@ class Orbis_Public {
         }
 
         wp_send_json_success( array( 'message' => 'Account reset successfully.' ) );
+    }
+
+    /**
+     * Handle Translations saving from frontend admin.
+     */
+    public function handle_save_translations() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
+        }
+        check_ajax_referer( 'orbis_save_translations', 'orbis_translations_nonce' );
+
+        $translations = $_POST['translations'];
+        if ( is_array( $translations ) ) {
+            $existing = get_option( 'orbis_translations', array() );
+            foreach ( $translations as $key => $data ) {
+                if ( isset( $existing[$key] ) ) {
+                    $existing[$key]['en'] = sanitize_textarea_field( $data['en'] );
+                    $existing[$key]['ar'] = sanitize_textarea_field( $data['ar'] );
+                }
+            }
+            update_option( 'orbis_translations', $existing );
+            wp_send_json_success( array( 'message' => 'Translations updated successfully.' ) );
+        }
+        wp_send_json_error( array( 'message' => 'No data received.' ) );
     }
 
     /**

@@ -34,6 +34,32 @@
             });
         });
 
+        // Translation Saving (AJAX)
+        $('#orbis-translations-form').on('submit', function(e) {
+            e.preventDefault();
+            const $msg = $('#orbis-admin-mgmt-msg');
+            const data = $(this).serialize() + '&action=orbis_save_translations';
+
+            $msg.html('<p style="color:blue;">Saving translations...</p>');
+
+            $.post(orbis_params.ajax_url, data, function(response) {
+                if (response.success) {
+                    $msg.html('<p style="color:green;">' + response.data.message + '</p>');
+                } else {
+                    $msg.html('<p style="color:red;">' + response.data.message + '</p>');
+                }
+            });
+        });
+
+        // Translation Search
+        $('#orbis-translation-search').on('keyup', function() {
+            const val = $(this).val().toLowerCase();
+            $('.orbis-translation-row').each(function() {
+                const text = $(this).text().toLowerCase();
+                $(this).toggle(text.indexOf(val) > -1);
+            });
+        });
+
         // Media Library for Logo
         $('#orbis-select-logo').on('click', function(e) {
             e.preventDefault();
