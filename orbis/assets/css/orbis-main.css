@@ -1,0 +1,60 @@
+/* Orbis Main Styles */
+.orbis-dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f7f6;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.orbis-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.orbis-dashboard-nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+}
+
+.orbis-dashboard-nav a {
+    text-decoration: none;
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.orbis-dashboard-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* RTL Support */
+[dir="rtl"] .orbis-dashboard-header {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .orbis-dashboard-nav ul {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .orbis-dashboard-container {
+    text-align: right;
+}
+
+/* Admin Styles */
+.orbis-admin-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    margin-top: 20px;
+}
